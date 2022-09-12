@@ -36,14 +36,8 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
           data = data1;
           vendorid = data1['vid'];
         });
-        print('data of vid is ${data.toString()}');
       }
-      // /data = value.data();
-      //print(data1['name']);
-      //log(data['address']);
     });
-
-    print(data[0][0]['name']);
   }
 
   late OrderModel scheduledordermodel;
@@ -52,23 +46,20 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
     await FirebaseFirestore.instance
         .collection('Orders')
         .where('vid', isEqualTo: vendorid)
-        .where('orderStatus', isEqualTo: 'accepted')
-        // .where('mobile',isEqualTo: widget.phone)
+        .where('orderStatus', whereIn: ["picked", "dispatched"])
         .get()
         .then((value) {
-      scheduledorderList.clear();
-      for (var data1 in value.docs) {
-        //log(' the of orders is this ${data1.data().toString()}');
-        scheduledordermodel = OrderModel.fromMap(data1.data());
-        //print('similar data are ${data1.data().toString()}');
-        setState(() {
-          scheduledorderList.add(scheduledordermodel);
-          data = data1;
-          //scheduledorderList[index].pickupTime
+          scheduledorderList.clear();
+          for (var data1 in value.docs) {
+            //log(' the of orders is this ${data1.data().toString()}');
+            scheduledordermodel = OrderModel.fromMap(data1.data());
+
+            setState(() {
+              scheduledorderList.add(scheduledordermodel);
+              data = data1;
+            });
+          }
         });
-        print(data1.data());
-      }
-    });
   }
 
   late UserModel userModel;
@@ -99,7 +90,6 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
           // usersList.add(dataUser);
           usersList.add(userModel);
         });
-        print("MILLLLL -->  ${usersList[0].name}");
       }
     });
   }
@@ -109,30 +99,31 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
     getVendor();
     getScheduledOrders();
     return Scaffold(
-      body: Container(
-          child: Column(
+      body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: const [
-                Text("Scheduled Orders",
+                Text("Picked Up Orders",
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 23)),
               ],
             ),
           ),
-          scheduledorderList.length >= 1
+          scheduledorderList.isNotEmpty
               ? SizedBox(
                   height: MediaQuery.of(context).size.height * 0.7,
                   width: MediaQuery.of(context).size.width * 0.9,
                   child: ListView.builder(
                       itemCount: scheduledorderList.length,
                       itemBuilder: (context, index) {
+                        String orderstatus =
+                            scheduledorderList[index].orderStatus;
                         getUsers(index);
                         return Container(
-                            margin: EdgeInsets.only(top: 25),
+                            margin: const EdgeInsets.only(top: 25),
                             width: (MediaQuery.of(context).size.width) * 0.9,
                             padding: const EdgeInsets.all(25),
                             decoration: BoxDecoration(
@@ -152,26 +143,26 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
                               children: [
                                 Row(
                                   children: [
-                                    CircleAvatar(
-                                      radius: 35.0,
-                                      backgroundImage:
-                                          NetworkImage(usersList[index].imgUrl),
-                                      backgroundColor: Colors.transparent,
-                                    ),
+                                    // CircleAvatar(
+                                    //   radius: 35.0,
+                                    //   backgroundImage:
+                                    //       NetworkImage(usersList[index].imgUrl),
+                                    //   backgroundColor: Colors.transparent,
+                                    // ),
                                     const SizedBox(width: 20),
                                     Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Text(
-                                          usersList[index].name.toString(),
-                                          style: TextStyle(
+                                          usersList[0].name.toString(),
+                                          style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 23),
                                           textAlign: TextAlign.start,
                                         ),
                                         Text(
-                                          usersList[index].address.toString(),
+                                          usersList[0].address.toString(),
                                           textAlign: TextAlign.start,
                                         )
                                       ],
@@ -188,7 +179,7 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
                                               .pickupAdrs))
                                     ]),
                                 Row(children: [
-                                  Text('Pickup Date  : '),
+                                  const Text('Pickup Date  : '),
                                   Expanded(
                                       child: Text(
                                           scheduledorderList[index].pickupTime))
@@ -196,17 +187,17 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
                                 Row(children: [
                                   const Text('Pickup Time  : '),
                                   Row(
-                                    children: [
-                                      const Text('11:45 PM'),
-                                      const SizedBox(width: 30),
-                                      Container(
-                                        padding: const EdgeInsets.all(5),
-                                        decoration: const BoxDecoration(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(20)),
-                                            color: Colors.orange),
-                                        child: const Text('Due in 2 Hours'),
-                                      )
+                                    children: const [
+                                      Text('11:45 PM'),
+                                      SizedBox(width: 30),
+                                      // Container(
+                                      //   padding: const EdgeInsets.all(5),
+                                      //   decoration: const BoxDecoration(
+                                      //       borderRadius: BorderRadius.all(
+                                      //           Radius.circular(20)),
+                                      //       color: Colors.orange),
+                                      //   child: const Text('Due in 2 Hours'),
+                                      // )
                                     ],
                                   )
                                 ]),
@@ -217,6 +208,18 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ScheduledOrderDetail(
+                                                      orders:
+                                                          scheduledorderList[
+                                                              index],
+                                                      users: usersList[0],
+                                                    )));
+                                      },
                                       child: const Text('View Details',
                                           style:
                                               TextStyle(color: Colors.orange)),
@@ -224,732 +227,539 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
                                     Expanded(
                                       child: InkWell(
                                           onTap: () {
+                                            if (orderstatus == "dispatched") {
+                                              FirebaseFirestore.instance
+                                                  .collection("Orders")
+                                                  .doc(scheduledorderList[index]
+                                                      .trackingId)
+                                                  .update({
+                                                'orderStatus': "complete"
+                                              }).then((value) =>
+                                                      print("dissssss"));
+                                            } else if (orderstatus ==
+                                                "picked") {
+                                              FirebaseFirestore.instance
+                                                  .collection("Orders")
+                                                  .doc(scheduledorderList[index]
+                                                      .trackingId)
+                                                  .update({
+                                                'orderStatus': "dispatched"
+                                              }).then((value) =>
+                                                      print("dissssss"));
+                                            }
                                             //Navigator.push(context, MaterialPageRoute(builder:  (context) => const ProfilePage()));
-                                            showDialog(
-                                                context: context,
-                                                builder: (_) => AlertDialog(
-                                                        content: Container(
-                                                      height: (MediaQuery.of(
-                                                                  context)
-                                                              .size
-                                                              .height) *
-                                                          0.5,
-                                                      decoration:
-                                                          const BoxDecoration(
-                                                        //color: Colors.grey,
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    50)),
-                                                        //color: Colors.orange
-                                                      ),
-                                                      child: Column(
-                                                        children: [
-                                                          Row(
-                                                            children: [
-                                                              const CircleAvatar(
-                                                                radius: 35.0,
-                                                                backgroundImage:
-                                                                    NetworkImage(
-                                                                        'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'),
-                                                                backgroundColor:
-                                                                    Colors
-                                                                        .transparent,
-                                                              ),
-                                                              const SizedBox(
-                                                                  width: 20),
-                                                              Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: const <
-                                                                    Widget>[
-                                                                  Text(
-                                                                    'Mukesh Mehta',
-                                                                    style: TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight
-                                                                                .bold,
-                                                                        fontSize:
-                                                                            23),
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .start,
-                                                                  ),
-                                                                  Text(
-                                                                    'Delhi',
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .start,
-                                                                  )
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Pickup Address  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                                    scheduledorderList[
-                                                                            index]
-                                                                        .pickupAdrs,
-                                                                    style: const TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight.bold)))
-                                                          ]),
-                                                          Row(children: [
-                                                            Text(
-                                                                'Pickup Date  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              scheduledorderList[
-                                                                      index]
-                                                                  .pickupTime,
-                                                              style: TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Length  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              '${scheduledorderList[index].length} cm',
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Breadth  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              '${scheduledorderList[index].breadth} cm',
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Height  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              '${scheduledorderList[index].height} cm',
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Weight of the package  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              '${scheduledorderList[index].weight} kg',
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Content of the package  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              scheduledorderList[
-                                                                      index]
-                                                                  .packageContent,
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: const [
-                                                            Text(
-                                                                'Mode of Payment  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              'COD',
-                                                              style: TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Amount  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              '${scheduledorderList[index].packageValue}',
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(children: [
-                                                            const Text(
-                                                                'Type of shipment  : '),
-                                                            Expanded(
-                                                                child: Text(
-                                                              scheduledorderList[
-                                                                      index]
-                                                                  .shipmentType,
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ))
-                                                          ]),
-                                                          Row(
-                                                            children: <Widget>[
-                                                              InkWell(
-                                                                onTap: () {
-                                                                  if (isagreed ==
-                                                                      true) {
-                                                                    setState(
-                                                                        () {
-                                                                      isagreed =
-                                                                          false;
-                                                                    });
-                                                                  } else {
-                                                                    setState(
-                                                                        () {
-                                                                      isagreed =
-                                                                          true;
-                                                                    });
-                                                                  }
-                                                                },
-                                                                child:
-                                                                    Container(
-                                                                  height: 20,
-                                                                  decoration: BoxDecoration(
-                                                                      border: Border.all(
-                                                                          width:
-                                                                              1,
-                                                                          color:
-                                                                              Colors.black)),
-                                                                  child: Icon(
-                                                                    Icons.check,
-                                                                    color: isagreed
-                                                                        ? Colors
-                                                                            .white
-                                                                        : Colors
-                                                                            .orange,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              const Text(
-                                                                  "I have received the cash")
-                                                            ],
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () {
-                                                              var snackBar = SnackBar(
-                                                                  content: Text(
-                                                                      'Please Check the Box'));
-                                                              isagreed
-                                                                  ? showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder: (_) =>
-                                                                          AlertDialog(
-                                                                              content:
-                                                                                  Container(
-                                                                            height:
-                                                                                (MediaQuery.of(context).size.height) * 0.21,
-                                                                            decoration:
-                                                                                const BoxDecoration(),
-                                                                            child:
-                                                                                Column(
-                                                                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                              children: [
-                                                                                Align(alignment: Alignment.centerRight, child: IconButton(onPressed: () {}, icon: const Icon(Icons.close))),
-                                                                                const Text(
-                                                                                  'Confirmed the weight of the parcel?',
-                                                                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                  textAlign: TextAlign.center,
-                                                                                ),
-                                                                                const SizedBox(
-                                                                                  height: 20,
-                                                                                ),
-                                                                                Row(
-                                                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                  children: [
-                                                                                    InkWell(
-                                                                                      onTap: () {
-                                                                                        showDialog(
-                                                                                            context: context,
-                                                                                            builder: (_) => AlertDialog(
-                                                                                                    content: Container(
-                                                                                                  height: (MediaQuery.of(context).size.height) * 0.3,
-                                                                                                  decoration: const BoxDecoration(
-                                                                                                    //color: Colors.grey,
-                                                                                                    borderRadius: BorderRadius.all(Radius.circular(50)),
-                                                                                                    //color: Colors.orange
-                                                                                                  ),
-                                                                                                  child: Column(
-                                                                                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                                    children: [
-                                                                                                      Row(
-                                                                                                        mainAxisAlignment: MainAxisAlignment.end,
-                                                                                                        children: [
-                                                                                                          IconButton(onPressed: () {}, icon: const Icon(Icons.close))
-                                                                                                        ],
-                                                                                                      ),
-                                                                                                      const Text(
-                                                                                                        'Enter the weight of the package',
-                                                                                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                                      ),
-                                                                                                      Container(
-                                                                                                        height: (MediaQuery.of(context).size.height) * 0.05,
-                                                                                                        padding: const EdgeInsets.only(left: 15, right: 15),
-                                                                                                        decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 1), borderRadius: const BorderRadius.all(Radius.circular(10))),
-                                                                                                        child: Row(
-                                                                                                          children: <Widget>[
-                                                                                                            Flexible(
-                                                                                                              child: TextField(
-                                                                                                                controller: weightcontroller,
-                                                                                                                decoration: const InputDecoration(hintText: 'Weight', border: InputBorder.none),
-                                                                                                              ),
-                                                                                                            ),
-                                                                                                            const Expanded(
-                                                                                                                child: Align(
-                                                                                                              alignment: Alignment.centerRight,
-                                                                                                              child: Text(
-                                                                                                                'Kg',
-                                                                                                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
-                                                                                                              ),
-                                                                                                            ))
-                                                                                                          ],
-                                                                                                        ),
-                                                                                                      ),
-                                                                                                      InkWell(
-                                                                                                        onTap: () {
-                                                                                                          FirebaseFirestore db = FirebaseFirestore.instance;
+                                            // showDialog(
+                                            //     context: context,
+                                            //     builder: (_) => AlertDialog(
+                                            //             content: Container(
+                                            //           height: (MediaQuery.of(
+                                            //                       context)
+                                            //                   .size
+                                            //                   .height) *
+                                            //               0.5,
+                                            //           decoration:
+                                            //               const BoxDecoration(
+                                            //             //color: Colors.grey,
+                                            //             borderRadius:
+                                            //                 BorderRadius.all(
+                                            //                     Radius.circular(
+                                            //                         50)),
+                                            //             //color: Colors.orange
+                                            //           ),
+                                            //           child: Column(
+                                            //             children: [
+                                            //               Row(
+                                            //                 children: [
+                                            //                   const CircleAvatar(
+                                            //                     radius: 35.0,
+                                            //                     backgroundImage:
+                                            //                         NetworkImage(
+                                            //                             'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'),
+                                            //                     backgroundColor:
+                                            //                         Colors
+                                            //                             .transparent,
+                                            //                   ),
+                                            //                   const SizedBox(
+                                            //                       width: 20),
+                                            //                   Column(
+                                            //                     crossAxisAlignment:
+                                            //                         CrossAxisAlignment
+                                            //                             .start,
+                                            //                     children: <
+                                            //                         Widget>[
+                                            //                       Text(
+                                            //                         usersList[0]
+                                            //                             .name
+                                            //                             .toString(),
+                                            //                         style: const TextStyle(
+                                            //                             fontWeight:
+                                            //                                 FontWeight
+                                            //                                     .bold,
+                                            //                             fontSize:
+                                            //                                 23),
+                                            //                         textAlign:
+                                            //                             TextAlign
+                                            //                                 .start,
+                                            //                       ),
+                                            //                       // Text(
+                                            //                       //   scheduledorderList[0][""],
+                                            //                       //   textAlign:
+                                            //                       //       TextAlign
+                                            //                       //           .start,
+                                            //                       // )
+                                            //                     ],
+                                            //                   ),
+                                            //                 ],
+                                            //               ),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Pickup Address  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                         scheduledorderList[
+                                            //                                 index]
+                                            //                             .pickupAdrs,
+                                            //                         style: const TextStyle(
+                                            //                             fontWeight:
+                                            //                                 FontWeight.bold)))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Pickup Date  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   scheduledorderList[
+                                            //                           index]
+                                            //                       .pickupTime,
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Length  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   '${scheduledorderList[index].length} cm',
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Breadth  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   '${scheduledorderList[index].breadth} cm',
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Height  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   '${scheduledorderList[index].height} cm',
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Weight of the package  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   '${scheduledorderList[index].weight} kg',
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Content of the package  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   scheduledorderList[
+                                            //                           index]
+                                            //                       .packageContent,
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: const [
+                                            //                 Text(
+                                            //                     'Mode of Payment  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   'COD',
+                                            //                   style: TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Amount  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   '${scheduledorderList[index].packageValue}',
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(children: [
+                                            //                 const Text(
+                                            //                     'Type of shipment  : '),
+                                            //                 Expanded(
+                                            //                     child: Text(
+                                            //                   scheduledorderList[
+                                            //                           index]
+                                            //                       .shipmentType,
+                                            //                   style: const TextStyle(
+                                            //                       fontWeight:
+                                            //                           FontWeight
+                                            //                               .bold),
+                                            //                 ))
+                                            //               ]),
+                                            //               Row(
+                                            //                 children: <Widget>[
+                                            //                   InkWell(
+                                            //                     onTap: () {
+                                            //                       if (isagreed ==
+                                            //                           true) {
+                                            //                         setState(
+                                            //                             () {
+                                            //                           isagreed =
+                                            //                               false;
+                                            //                         });
+                                            //                       } else {
+                                            //                         setState(
+                                            //                             () {
+                                            //                           isagreed =
+                                            //                               true;
+                                            //                         });
+                                            //                       }
+                                            //                     },
+                                            //                     child:
+                                            //                         Container(
+                                            //                       height: 20,
+                                            //                       decoration: BoxDecoration(
+                                            //                           border: Border.all(
+                                            //                               width:
+                                            //                                   1,
+                                            //                               color:
+                                            //                                   Colors.black)),
+                                            //                       child: Icon(
+                                            //                         Icons.check,
+                                            //                         color: isagreed
+                                            //                             ? Colors
+                                            //                                 .orange
+                                            //                             : Colors
+                                            //                                 .white,
+                                            //                       ),
+                                            //                     ),
+                                            //                   ),
+                                            //                   const Text(
+                                            //                       "I have received the cash")
+                                            //                 ],
+                                            //               ),
+                                            //               InkWell(
+                                            //                 onTap: () {
+                                            //                   print("4");
+                                            //                   var snackBar =
+                                            //                       const SnackBar(
+                                            //                           content: Text(
+                                            //                               'Please Check the Box'));
+                                            //                   isagreed
+                                            //                       ? showDialog(
+                                            //                           context:
+                                            //                               context,
+                                            //                           builder: (_) =>
+                                            //                               AlertDialog(
+                                            //                                   content:
+                                            //                                       Container(
+                                            //                                 height:
+                                            //                                     (MediaQuery.of(context).size.height) * 0.21,
+                                            //                                 decoration:
+                                            //                                     const BoxDecoration(),
+                                            //                                 child:
+                                            //                                     Column(
+                                            //                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                            //                                   children: [
+                                            //                                     Align(
+                                            //                                         alignment: Alignment.centerRight,
+                                            //                                         child: IconButton(
+                                            //                                             onPressed: () {
+                                            //                                               Navigator.pop(context);
+                                            //                                             },
+                                            //                                             icon: const Icon(Icons.close))),
+                                            //                                     const Text(
+                                            //                                       'Confirmed the weight of the parcel?',
+                                            //                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                            //                                       textAlign: TextAlign.center,
+                                            //                                     ),
+                                            //                                     const SizedBox(
+                                            //                                       height: 20,
+                                            //                                     ),
+                                            //                                     Row(
+                                            //                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            //                                       children: [
+                                            //                                         InkWell(
+                                            //                                           onTap: () {
+                                            //                                             print("5");
+                                            //                                             showDialog(
+                                            //                                                 context: context,
+                                            //                                                 builder: (_) => AlertDialog(
+                                            //                                                         content: Container(
+                                            //                                                       height: (MediaQuery.of(context).size.height) * 0.3,
+                                            //                                                       decoration: const BoxDecoration(
+                                            //                                                         //color: Colors.grey,
+                                            //                                                         borderRadius: BorderRadius.all(Radius.circular(50)),
+                                            //                                                         //color: Colors.orange
+                                            //                                                       ),
+                                            //                                                       child: Column(
+                                            //                                                         mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                            //                                                         children: [
+                                            //                                                           Row(
+                                            //                                                             mainAxisAlignment: MainAxisAlignment.end,
+                                            //                                                             children: [
+                                            //                                                               IconButton(
+                                            //                                                                   onPressed: () {
+                                            //                                                                     Navigator.pop(context);
+                                            //                                                                   },
+                                            //                                                                   icon: const Icon(Icons.close))
+                                            //                                                             ],
+                                            //                                                           ),
+                                            //                                                           const Text(
+                                            //                                                             'Enter the weight of the package',
+                                            //                                                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                            //                                                           ),
+                                            //                                                           Container(
+                                            //                                                             height: (MediaQuery.of(context).size.height) * 0.05,
+                                            //                                                             padding: const EdgeInsets.only(left: 15, right: 15),
+                                            //                                                             decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 1), borderRadius: const BorderRadius.all(Radius.circular(10))),
+                                            //                                                             child: Row(
+                                            //                                                               children: <Widget>[
+                                            //                                                                 Flexible(
+                                            //                                                                   child: TextField(
+                                            //                                                                     controller: weightcontroller,
+                                            //                                                                     decoration: const InputDecoration(hintText: 'Weight', border: InputBorder.none),
+                                            //                                                                   ),
+                                            //                                                                 ),
+                                            //                                                                 const Expanded(
+                                            //                                                                     child: Align(
+                                            //                                                                   alignment: Alignment.centerRight,
+                                            //                                                                   child: Text(
+                                            //                                                                     'Kg',
+                                            //                                                                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+                                            //                                                                   ),
+                                            //                                                                 ))
+                                            //                                                               ],
+                                            //                                                             ),
+                                            //                                                           ),
+                                            //                                                           InkWell(
+                                            //                                                             onTap: () {
+                                            //                                                               FirebaseFirestore db = FirebaseFirestore.instance;
 
-                                                                                                          final updateStatus = db.collection("orders").doc(scheduledorderList[index].trackingId);
-                                                                                                          updateStatus.update({
-                                                                                                            "weight": weightcontroller.text
-                                                                                                          }).then((value) => log(""), onError: (e) => log("Error updating document $e"));
-                                                                                                          //updateData(id1, id2, n),
+                                            //                                                               final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
+                                            //                                                               updateStatus.update({
+                                            //                                                                 "weight": weightcontroller.text,
+                                            //                                                                 "orderStatus": "picked"
+                                            //                                                               }).then((value) {
+                                            //                                                                 print("done");
+                                            //                                                               });
+                                            //                                                               //updateData(id1, id2, n),
 
-                                                                                                          showDialog(
-                                                                                                              context: context,
-                                                                                                              builder: (_) => AlertDialog(
-                                                                                                                      content: Container(
-                                                                                                                    height: (MediaQuery.of(context).size.height) * 0.21,
-                                                                                                                    child: Column(
-                                                                                                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                                                      children: [
-                                                                                                                        Align(alignment: Alignment.centerRight, child: IconButton(onPressed: () {}, icon: const Icon(Icons.close))),
-                                                                                                                        const Text(
-                                                                                                                          'You have Successfully Completed your pickup',
-                                                                                                                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                                                          textAlign: TextAlign.center,
-                                                                                                                        ),
-                                                                                                                        const SizedBox(
-                                                                                                                          height: 20,
-                                                                                                                        ),
-                                                                                                                        Row(
-                                                                                                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                                                          children: [
-                                                                                                                            InkWell(
-                                                                                                                              child: Container(
-                                                                                                                                height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                                                width: (MediaQuery.of(context).size.width) * 0.65,
-                                                                                                                                decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                                                child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                                                              ),
-                                                                                                                            ),
-                                                                                                                          ],
-                                                                                                                        ),
-                                                                                                                      ],
-                                                                                                                    ),
-                                                                                                                  )));
-                                                                                                        },
-                                                                                                        child: Container(
-                                                                                                          height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                          width: (MediaQuery.of(context).size.width) * 0.8,
-                                                                                                          decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                          child: const Center(child: Text('Next', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22))),
-                                                                                                        ),
-                                                                                                      )
-                                                                                                    ],
-                                                                                                  ),
-                                                                                                )));
-                                                                                      },
-                                                                                      child: Container(
-                                                                                        height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                        width: (MediaQuery.of(context).size.width) * 0.3,
-                                                                                        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                        child: const Center(child: Text('Edit Weight', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                      ),
-                                                                                    ),
-                                                                                    InkWell(
-                                                                                      onTap: () {
-                                                                                        showDialog(
-                                                                                            context: context,
-                                                                                            builder: (_) => AlertDialog(
-                                                                                                    content: Container(
-                                                                                                  height: (MediaQuery.of(context).size.height) * 0.21,
-                                                                                                  child: Column(
-                                                                                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                                    children: [
-                                                                                                      Align(alignment: Alignment.centerRight, child: IconButton(onPressed: () {}, icon: const Icon(Icons.close))),
-                                                                                                      const Text(
-                                                                                                        'You have Successfully Completed your pickup',
-                                                                                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                                        textAlign: TextAlign.center,
-                                                                                                      ),
-                                                                                                      const SizedBox(
-                                                                                                        height: 20,
-                                                                                                      ),
-                                                                                                      Row(
-                                                                                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                                        children: [
-                                                                                                          InkWell(
-                                                                                                            child: Container(
-                                                                                                              height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                              width: (MediaQuery.of(context).size.width) * 0.65,
-                                                                                                              decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                              child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                                            ),
-                                                                                                          ),
-                                                                                                        ],
-                                                                                                      ),
-                                                                                                    ],
-                                                                                                  ),
-                                                                                                )));
-                                                                                        Navigator.pop(context);
-                                                                                      },
-                                                                                      child: Container(
-                                                                                        height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                        width: (MediaQuery.of(context).size.width) * 0.3,
-                                                                                        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                        child: const Center(child: Text('Yes', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                      ),
-                                                                                    ),
-                                                                                  ],
-                                                                                ),
-                                                                              ],
-                                                                            ),
-                                                                          )))
-                                                                  : ScaffoldMessenger.of(
-                                                                          context)
-                                                                      .showSnackBar(
-                                                                          snackBar);
-                                                            },
-                                                            child: Container(
-                                                              height: (MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .height) *
-                                                                  0.07,
-                                                              width: (MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .width) *
-                                                                  0.8,
-                                                              decoration: const BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius.all(
-                                                                          Radius.circular(
-                                                                              10)),
-                                                                  color: Colors
-                                                                      .orange),
-                                                              child: const Center(
-                                                                  child: Text(
-                                                                      'Proceed',
-                                                                      style: TextStyle(
-                                                                          fontWeight: FontWeight
-                                                                              .bold,
-                                                                          color: Colors
-                                                                              .white,
-                                                                          fontSize:
-                                                                              22))),
-                                                            ),
-                                                          ),
-                                                          /*InkWell(
-                                                    onTap: (){
-                                                      isagreed?
-                                                      showDialog(
-                                                          context: context,
-                                                          builder: (_) => AlertDialog(
-                                                              content: Container(
-                                                                height: (MediaQuery.of(context).size.height)*0.21,
-                                                                decoration: const BoxDecoration(
+                                            //                                                               showDialog(
+                                            //                                                                   context: context,
+                                            //                                                                   builder: (_) => AlertDialog(
+                                            //                                                                           content: SizedBox(
+                                            //                                                                         height: (MediaQuery.of(context).size.height) * 0.21,
+                                            //                                                                         child: Column(
+                                            //                                                                           mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                            //                                                                           children: [
+                                            //                                                                             Align(
+                                            //                                                                                 alignment: Alignment.centerRight,
+                                            //                                                                                 child: IconButton(
+                                            //                                                                                     onPressed: () {
+                                            //                                                                                       Navigator.pop(context);
+                                            //                                                                                     },
+                                            //                                                                                     icon: const Icon(Icons.close))),
+                                            //                                                                             const Text(
+                                            //                                                                               'You have Successfully Completed your pickup',
+                                            //                                                                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                            //                                                                               textAlign: TextAlign.center,
+                                            //                                                                             ),
+                                            //                                                                             const SizedBox(
+                                            //                                                                               height: 20,
+                                            //                                                                             ),
+                                            //                                                                             Row(
+                                            //                                                                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            //                                                                               children: [
+                                            //                                                                                 InkWell(
+                                            //                                                                                   onTap: () {
+                                            //                                                                                     Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
+                                            //                                                                                   },
+                                            //                                                                                   child: Container(
+                                            //                                                                                     height: (MediaQuery.of(context).size.height) * 0.07,
+                                            //                                                                                     width: (MediaQuery.of(context).size.width) * 0.65,
+                                            //                                                                                     decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                            //                                                                                     child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                            //                                                                                   ),
+                                            //                                                                                 ),
+                                            //                                                                               ],
+                                            //                                                                             ),
+                                            //                                                                           ],
+                                            //                                                                         ),
+                                            //                                                                       )));
+                                            //                                                             },
+                                            //                                                             child: Container(
+                                            //                                                               height: (MediaQuery.of(context).size.height) * 0.07,
+                                            //                                                               width: (MediaQuery.of(context).size.width) * 0.8,
+                                            //                                                               decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                            //                                                               child: const Center(child: Text('Next', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22))),
+                                            //                                                             ),
+                                            //                                                           )
+                                            //                                                         ],
+                                            //                                                       ),
+                                            //                                                     )));
+                                            //                                           },
+                                            //                                           child: Container(
+                                            //                                             height: (MediaQuery.of(context).size.height) * 0.07,
+                                            //                                             width: (MediaQuery.of(context).size.width) * 0.3,
+                                            //                                             decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                            //                                             child: const Center(child: Text('Edit Weight', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                            //                                           ),
+                                            //                                         ),
+                                            //                                         InkWell(
+                                            //                                           onTap: () {
+                                            //                                             FirebaseFirestore db = FirebaseFirestore.instance;
 
-                                                                ),
-                                                                child: Column(
-                                                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                  children: [
-
-
-                                                                    Align(
-                                                                        alignment:Alignment.centerRight,
-                                                                        child: IconButton(onPressed: (){
-                                                                          Navigator.pop(context);
-                                                                        }, icon: const Icon(Icons.close))
-                                                                    ),
-
-
-                                                                    const Text('Confirmed the weight of the parcel?',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
-                                                                    const SizedBox(
-                                                                      height: 20,
-                                                                    ),
-
-                                                                    Row(
-                                                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                      children: [
-                                                                        InkWell(
-                                                                          onTap: (){
-                                                                            showDialog(
-                                                                                context: context,
-                                                                                builder: (_) => AlertDialog(
-                                                                                    content: Container(
-                                                                                      height: (MediaQuery.of(context).size.height)*0.3,
-                                                                                      decoration: const BoxDecoration(
-                                                                                        //color: Colors.grey,
-                                                                                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                                                                                        //color: Colors.orange
-                                                                                      ),
-                                                                                      child: Column(
-                                                                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                        children: [
-
-                                                                                          Row(
-                                                                                            mainAxisAlignment: MainAxisAlignment.end,
-                                                                                            children: [
-                                                                                              IconButton(onPressed: (){
-                                                                                                Navigator.pop(context);
-                                                                                              }, icon: const Icon(Icons.close))
-                                                                                            ],
-                                                                                          ),
-
-                                                                                          const Text('Enter the weight of the package',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),
-                                                                                          Container(
-                                                                                            height: (MediaQuery.of(context).size.height)*0.05,
-                                                                                            padding: const EdgeInsets.only(left: 15,right: 15),
-                                                                                            decoration: BoxDecoration(
-                                                                                                border: Border.all(color: Colors.grey,width: 1),
-                                                                                                borderRadius: const BorderRadius.all(Radius.circular(10))
-                                                                                            ),
-                                                                                            child: Row(
-                                                                                              children:  <Widget>[
-                                                                                                Flexible(
-                                                                                                  child: TextField(
-                                                                                                    controller: weightcontroller,
-                                                                                                    decoration: InputDecoration(
-                                                                                                        hintText: 'Weight',
-                                                                                                        border: InputBorder.none
-
-                                                                                                    ),
-
-                                                                                                  ),
-                                                                                                ),
-                                                                                                Expanded(child: Align(alignment: Alignment.centerRight,child: Text('Kg',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: Colors.orange),),))
-                                                                                              ],
-                                                                                            ),
-                                                                                          ),
-                                                                                          InkWell(
-                                                                                            onTap: (){
-                                                                                              FirebaseFirestore db = FirebaseFirestore.instance;
-
-                                                                                              final updateStatus = db.collection("orders").doc(scheduledorderList[index].trackingId);
-                                                                                              updateStatus.update({"weight": weightcontroller.text}).then(
-                                                                                                      (value) => log(""),
-                                                                                                  onError: (e) => log("Error updating document $e"));
-                                                                                              //updateData(id1, id2, n),
-
-                                                                                              showDialog(
-                                                                                                  context: context,
-                                                                                                  builder: (_) => AlertDialog(
-
-
-                                                                                                      content: Container(
-                                                                                                        height: (MediaQuery.of(context).size.height)*0.21,
-
-                                                                                                        child: Column(
-                                                                                                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                                          children: [
-
-
-                                                                                                            Align(
-                                                                                                                alignment:Alignment.centerRight,
-                                                                                                                child: IconButton(onPressed: (){
-                                                                                                                  Navigator.pop(context);
-                                                                                                                }, icon: const Icon(Icons.close))
-                                                                                                            ),
-
-
-                                                                                                            const Text('You have Successfully Completed your pickup',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
-                                                                                                            const SizedBox(
-                                                                                                              height: 20,
-                                                                                                            ),
-
-                                                                                                            Row(
-                                                                                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                                              children: [
-                                                                                                                InkWell(
-                                                                                                                  child: Container(
-                                                                                                                    height: (MediaQuery.of(context).size.height)*0.07,
-                                                                                                                    width: (MediaQuery.of(context).size.width)*0.65,
-                                                                                                                    decoration: const BoxDecoration(
-                                                                                                                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                                                                                        color: Colors.orange
-                                                                                                                    ),
-                                                                                                                    child: const Center(child: Text('Go To Home',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                                                                                  ),
-                                                                                                                ),
-                                                                                                              ],
-                                                                                                            ),
-
-                                                                                                          ],
-                                                                                                        ),
-                                                                                                      )
-
-
-                                                                                                  )
-
-                                                                                              );
-
-
-                                                                                            },
-                                                                                            child: Container(
-                                                                                              height: (MediaQuery.of(context).size.height)*0.07,
-                                                                                              width: (MediaQuery.of(context).size.width)*0.8,
-                                                                                              decoration: const BoxDecoration(
-                                                                                                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                                                                  color: Colors.orange
-                                                                                              ),
-                                                                                              child: const Center(child: Text('Next',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 22))),
-                                                                                            ),
-                                                                                          )
-                                                                                        ],
-                                                                                      ),
-                                                                                    )
-                                                                                ));
-                                                                          },
-                                                                          child: Container(
-                                                                            height: (MediaQuery.of(context).size.height)*0.07,
-                                                                            width: (MediaQuery.of(context).size.width)*0.3,
-                                                                            decoration: const BoxDecoration(
-                                                                                borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                                                color: Colors.orange
-                                                                            ),
-                                                                            child: const Center(child: Text('Edit Weight',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                                          ),
-                                                                        ),
-
-                                                                        InkWell(
-                                                                          onTap: (){
-
-                                                                            showDialog(
-                                                                                context: context,
-                                                                                builder: (_) => AlertDialog(
-
-
-                                                                                    content: Container(
-                                                                                      height: (MediaQuery.of(context).size.height)*0.21,
-
-                                                                                      child: Column(
-                                                                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                        children: [
-
-
-                                                                                          Align(
-                                                                                              alignment:Alignment.centerRight,
-                                                                                              child: IconButton(onPressed: (){
-                                                                                                Navigator.pop(context);
-                                                                                              }, icon: const Icon(Icons.close))
-                                                                                          ),
-
-
-                                                                                          const Text('You have Successfully Completed your pickup',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
-                                                                                          const SizedBox(
-                                                                                            height: 20,
-                                                                                          ),
-
-                                                                                          Row(
-                                                                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                            children: [
-
-
-                                                                                              InkWell(
-                                                                                                child: Container(
-                                                                                                  height: (MediaQuery.of(context).size.height)*0.07,
-                                                                                                  width: (MediaQuery.of(context).size.width)*0.65,
-                                                                                                  decoration: const BoxDecoration(
-                                                                                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                                                                      color: Colors.orange
-                                                                                                  ),
-                                                                                                  child: const Center(child: Text('Go To Home',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                                                                ),
-                                                                                              ),
-                                                                                            ],
-                                                                                          ),
-
-                                                                                        ],
-                                                                                      ),
-                                                                                    )
-
-
-                                                                                )
-
-                                                                            );
-                                                                            Navigator.pop(context);
-
-
-                                                                          },
-                                                                          child: Container(
-                                                                            height: (MediaQuery.of(context).size.height)*0.07,
-                                                                            width: (MediaQuery.of(context).size.width)*0.3,
-                                                                            decoration: const BoxDecoration(
-                                                                                borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                                                color: Colors.orange
-                                                                            ),
-                                                                            child: const Center(child: Text('Yes',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                                          ),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-
-                                                                  ],
-                                                                ),
-                                                              )
-                                                          )
-                                                      ):SnackBar(content: Text('Pleasee Check the box'));
-                                                    },
-                                                    child: Container(
-                                                      height: (MediaQuery.of(context).size.height)*0.07,
-                                                      width: (MediaQuery.of(context).size.width)*0.8,
-                                                      decoration: const BoxDecoration(
-                                                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                          color: Colors.orange
-                                                      ),
-                                                      child: const Center(child: Text('Proceed',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 22))),
-                                                    ),
-                                                  ),*/
-                                                        ],
-                                                      ),
-                                                    )));
+                                            //                                             final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
+                                            //                                             updateStatus.update({
+                                            //                                               "orderStatus": "picked"
+                                            //                                             }).then((value) {
+                                            //                                               print("done");
+                                            //                                             });
+                                            //                                             //updateData(id1, id2, n),
+                                            //                                             showDialog(
+                                            //                                                 context: context,
+                                            //                                                 builder: (_) => AlertDialog(
+                                            //                                                         content: SizedBox(
+                                            //                                                       height: (MediaQuery.of(context).size.height) * 0.21,
+                                            //                                                       child: Column(
+                                            //                                                         mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                            //                                                         children: [
+                                            //                                                           Align(
+                                            //                                                               alignment: Alignment.centerRight,
+                                            //                                                               child: IconButton(
+                                            //                                                                   onPressed: () {
+                                            //                                                                     Navigator.pop(context);
+                                            //                                                                   },
+                                            //                                                                   icon: const Icon(Icons.close))),
+                                            //                                                           const Text(
+                                            //                                                             'You have Successfully Completed your pickup',
+                                            //                                                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                            //                                                             textAlign: TextAlign.center,
+                                            //                                                           ),
+                                            //                                                           const SizedBox(
+                                            //                                                             height: 20,
+                                            //                                                           ),
+                                            //                                                           Row(
+                                            //                                                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            //                                                             children: [
+                                            //                                                               InkWell(
+                                            //                                                                 onTap: () {
+                                            //                                                                   Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
+                                            //                                                                 },
+                                            //                                                                 child: Container(
+                                            //                                                                   height: (MediaQuery.of(context).size.height) * 0.07,
+                                            //                                                                   width: (MediaQuery.of(context).size.width) * 0.65,
+                                            //                                                                   decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                            //                                                                   child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                            //                                                                 ),
+                                            //                                                               ),
+                                            //                                                             ],
+                                            //                                                           ),
+                                            //                                                         ],
+                                            //                                                       ),
+                                            //                                                     )));
+                                            //                                             // Navigator.pop(context);
+                                            //                                           },
+                                            //                                           child: Container(
+                                            //                                             height: (MediaQuery.of(context).size.height) * 0.07,
+                                            //                                             width: (MediaQuery.of(context).size.width) * 0.3,
+                                            //                                             decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                            //                                             child: const Center(child: Text('Yes', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                            //                                           ),
+                                            //                                         ),
+                                            //                                       ],
+                                            //                                     ),
+                                            //                                   ],
+                                            //                                 ),
+                                            //                               )))
+                                            //                       : ScaffoldMessenger.of(
+                                            //                               context)
+                                            //                           .showSnackBar(
+                                            //                               snackBar);
+                                            //                 },
+                                            //                 child: Container(
+                                            //                   height: (MediaQuery.of(
+                                            //                               context)
+                                            //                           .size
+                                            //                           .height) *
+                                            //                       0.07,
+                                            //                   width: (MediaQuery.of(
+                                            //                               context)
+                                            //                           .size
+                                            //                           .width) *
+                                            //                       0.8,
+                                            //                   decoration: const BoxDecoration(
+                                            //                       borderRadius:
+                                            //                           BorderRadius.all(
+                                            //                               Radius.circular(
+                                            //                                   10)),
+                                            //                       color: Colors
+                                            //                           .orange),
+                                            //                   child: const Center(
+                                            //                       child: Text(
+                                            //                           'Proceed',
+                                            //                           style: TextStyle(
+                                            //                               fontWeight: FontWeight
+                                            //                                   .bold,
+                                            //                               color: Colors
+                                            //                                   .white,
+                                            //                               fontSize:
+                                            //                                   22))),
+                                            //                 ),
+                                            //               ),
+                                            //             ],
+                                            //           ),
+                                            //         )));
                                           },
-                                          child: const Align(
+                                          child: Align(
                                             alignment: Alignment.centerRight,
-                                            child: Text('Pick Order',
-                                                style: TextStyle(
+                                            child: Text(
+                                                orderstatus == "dispatched"
+                                                    ? "Deliver"
+                                                    : "Dispatched",
+                                                style: const TextStyle(
                                                     color: Colors.orange)),
                                           )),
                                     )
@@ -960,7 +770,8 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
                       }))
               : SizedBox(
                   height: MediaQuery.of(context).size.height * 0.7,
-                  child: Center(child: Text('Data not Found'))),
+                  child: const Center(
+                      child: Text('No Picked up or Dispatched Orders'))),
           Expanded(
               child: Align(
             alignment: FractionalOffset.bottomCenter,
@@ -1042,306 +853,7 @@ class _ScheduledOrdersState extends State<ScheduledOrders> {
             ),
           ))
         ],
-      )),
+      ),
     );
   }
 }
-
-
-
-/*
-
-showDialog(
-context: context,
-builder: (_) => AlertDialog(
-
-*/
-/*content: Container(
-                                    height: (MediaQuery.of(context).size.height)*0.5,
-                                    decoration: BoxDecoration(
-                                      //color: Colors.grey,
-                                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                                        //color: Colors.orange
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            const CircleAvatar(
-                                              radius: 35.0,
-                                              backgroundImage:
-                                              NetworkImage('https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'),
-                                              backgroundColor: Colors.transparent,
-                                            ),
-                                            const SizedBox(width: 20),
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: const <Widget>[
-                                                Text('Mukesh Mehta',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 23),textAlign: TextAlign.start,),
-                                                Text('Delhi',textAlign: TextAlign.start,)
-                                              ],
-                                            ),
-                                          ],
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Pickup Address  : '),
-                                              Expanded(child: Text('O87 Outer ring road Delhi, 111043 more address',style: TextStyle(fontWeight: FontWeight.bold)))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Pickup Date  : '),
-                                              Expanded(child: Text('11/05/2022',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Length  : '),
-                                              Expanded(child: Text('30 cm',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Breadth  : '),
-                                              Expanded(child: Text('30 cm',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Height  : '),
-                                              Expanded(child: Text('30 cm',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Weight of the package  : '),
-                                              Expanded(child: Text('7 kg',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Content of the package  : '),
-                                              Expanded(child: Text('Laptop',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Mode of Payment  : '),
-                                              Expanded(child: Text('COD',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Amount  : '),
-                                              Expanded(child: Text('5628',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Type of shipment  : '),
-                                              Expanded(child: Text('Domestic',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                          children: <Widget>[
-                                            Checkbox(onChanged: (bool? value) =><dynamic>{}, value: isagreed ),
-                                            const Text("I have received the cash")
-                                          ],
-                                        ),
-                                        InkWell(
-                                          child: Container(
-                                            height: (MediaQuery.of(context).size.height)*0.07,
-                                            width: (MediaQuery.of(context).size.width)*0.8,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.all(Radius.circular(10)),
-                                              color: Colors.orange
-                                            ),
-                                            child: Center(child: Text('Proceed',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 22))),
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),*//*
-
-
-
-*/
-                                  /*content: Container(
-                                      height: (MediaQuery.of(context).size.height)*0.3,
-                                      decoration: const BoxDecoration(
-                                        //color: Colors.grey,
-                                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                                        //color: Colors.orange
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(onPressed: (){}, icon: const Icon(Icons.close))
-                                            ],
-                                          ),
-
-                                          const Text('Enter the weight of the package',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),
-                                          Container(
-                                            height: (MediaQuery.of(context).size.height)*0.05,
-                                            padding: EdgeInsets.only(left: 15,right: 15),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(color: Colors.grey,width: 1),
-                                              borderRadius: const BorderRadius.all(Radius.circular(10))
-                                            ),
-                                            child: Row(
-                                              children: const <Widget>[
-                                                Flexible(
-                                                  child: TextField(
-                                                    decoration: InputDecoration(
-                                                      hintText: 'Weight',
-                                                      border: InputBorder.none
-
-                                                    ),
-
-                                                  ),
-                                                ),
-                                                Expanded(child: Align(alignment: Alignment.centerRight,child: Text('Kg',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: Colors.orange),),))
-                                              ],
-                                            ),
-                                          ),
-                                          InkWell(
-                                            child: Container(
-                                              height: (MediaQuery.of(context).size.height)*0.07,
-                                              width: (MediaQuery.of(context).size.width)*0.8,
-                                              decoration: const BoxDecoration(
-                                                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                  color: Colors.orange
-                                              ),
-                                              child: const Center(child: Text('Next',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 22))),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                    )*/
-
-
-/*
-
-
-*/
-/* content: Container(
-                                      height: (MediaQuery.of(context).size.height)*0.21,
-                                      decoration: const BoxDecoration(
-                                        //color: Colors.grey,
-                                        //borderRadius: BorderRadius.all(Radius.circular(50)),
-                                        //color: Colors.orange
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-
-
-                                          Align(
-                                            alignment:Alignment.centerRight,
-                                              child: IconButton(onPressed: (){}, icon: const Icon(Icons.close))
-                                          ),
-
-
-                                          const Text('Confirmed the weight of the parcel?',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
-                                          SizedBox(
-                                            height: 20,
-                                          ),
-
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              InkWell(
-                                                child: Container(
-                                                  height: (MediaQuery.of(context).size.height)*0.07,
-                                                  width: (MediaQuery.of(context).size.width)*0.3,
-                                                  decoration: const BoxDecoration(
-                                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                      color: Colors.orange
-                                                  ),
-                                                  child: const Center(child: Text('Edit Weight',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                ),
-                                              ),
-
-                                              InkWell(
-                                                child: Container(
-                                                  height: (MediaQuery.of(context).size.height)*0.07,
-                                                  width: (MediaQuery.of(context).size.width)*0.3,
-                                                  decoration: const BoxDecoration(
-                                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                      color: Colors.orange
-                                                  ),
-                                                  child: const Center(child: Text('Yes',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-
-                                        ],
-                                      ),
-                                    )*/
-/*
-
-content: Container(
-height: (MediaQuery.of(context).size.height)*0.21,
-decoration: const BoxDecoration(
-//color: Colors.grey,
-//borderRadius: BorderRadius.all(Radius.circular(50)),
-//color: Colors.orange
-),
-child: Column(
-mainAxisAlignment: MainAxisAlignment.spaceAround,
-children: [
-
-
-Align(
-alignment:Alignment.centerRight,
-child: IconButton(onPressed: (){}, icon: const Icon(Icons.close))
-),
-
-
-const Text('You have Successfully Completed your pickup',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
-const SizedBox(
-height: 20,
-),
-
-Row(
-mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-children: [
-
-
-InkWell(
-child: Container(
-height: (MediaQuery.of(context).size.height)*0.07,
-width: (MediaQuery.of(context).size.width)*0.65,
-decoration: const BoxDecoration(
-borderRadius: BorderRadius.all(Radius.circular(10)),
-color: Colors.orange
-),
-child: const Center(child: Text('Go To Home',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-),
-),
-],
-),
-
-],
-),
-)
-
-
-)
-);*/

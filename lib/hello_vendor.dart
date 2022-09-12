@@ -50,9 +50,6 @@ class _HelloVendorState extends State<HelloVendor> {
           //print('data of vid is ${data.toString()}');
         });
       }
-      // /data = value.data();
-      //print(data1['name']);
-      //log(data['address']);
     });
 
     //print(data[0][0]['name']);
@@ -62,7 +59,6 @@ class _HelloVendorState extends State<HelloVendor> {
   List<OrderModel> orderList = [];
 
   _getOrders() async {
-    print(vendorid);
     await FirebaseFirestore.instance
         .collection('Orders')
         .where('vid', isEqualTo: vendorid)
@@ -73,19 +69,14 @@ class _HelloVendorState extends State<HelloVendor> {
       orderList.clear();
       for (var data1 in value.docs) {
         //log(' the of orders is this ${data1.data().toString()}');
-        ordermodel = OrderModel.fromMap(data1.data());
+        ordermodel = OrderModel?.fromMap(data1.data());
         //print('similar data are ${data1.data().toString()}');
         setState(() {
           orderList.add(ordermodel);
           data = data1;
         });
       }
-      // /data = value.data();
-      //print(data1['name']);
-      //log(data['address']);
     });
-
-    //print(data[0][0]['name']);
   }
 
   late OrderModel scheduledordermodel;
@@ -95,14 +86,11 @@ class _HelloVendorState extends State<HelloVendor> {
         .collection('Orders')
         .where('vid', isEqualTo: vendorid)
         .where('orderStatus', isEqualTo: 'accepted')
-        // .where('mobile',isEqualTo: widget.phone)
         .get()
         .then((value) {
       scheduledorderList.clear();
       for (var data1 in value.docs) {
-        //log(' the of orders is this ${data1.data().toString()}');
-        scheduledordermodel = OrderModel.fromMap(data1.data());
-        //print('similar data are ${data1.data().toString()}');
+        scheduledordermodel = OrderModel?.fromMap(data1.data());
         setState(() {
           scheduledorderList.add(scheduledordermodel);
           data = data1;
@@ -111,27 +99,6 @@ class _HelloVendorState extends State<HelloVendor> {
     });
   }
 
-  //late OrderModel scheduledordermodel;
-  //List<OrderModel> scheduledorderList = [];
-  /*getScheduledOrders() async{
-    await FirebaseFirestore.instance.collection('Orders').where('vid',isEqualTo: vendorid )
-        .where('orderStatus',isEqualTo: 'accepted')
-    // .where('mobile',isEqualTo: widget.phone)
-        .get()
-        .then((value) {
-      scheduledorderList.clear();
-      for (var data1 in value.docs) {
-        //log(' the of orders is this ${data1.data().toString()}');
-        scheduledordermodel = OrderModel.fromMap(data1.data());
-        //print('similar data are ${data1.data().toString()}');
-        setState(() {
-          scheduledorderList.add(scheduledordermodel);
-          data = data1;
-          //scheduledorderList[index].pickupTime
-        });
-      }
-    }
-    ); }*/
   late UserModel userModel;
   List<UserModel> usersList = [];
 
@@ -142,15 +109,6 @@ class _HelloVendorState extends State<HelloVendor> {
         .where('uid', isEqualTo: scheduledorderList[index].uid)
         .get()
         .then((value) {
-      //(imgUrl, uid, address, phone, name, email)
-      /* print('the user data is ${value.docs[index].data()['name']}');
-      print(value.docs[index].data()['name']);
-      name = value.docs[index].data()['name'];
-      print(name);
-      address = value.docs[index].data()['address'];
-      print(address);
-      image = value.docs[index].data()['imgUrl'];*/
-
       usersList.clear();
       for (var data1 in value.docs) {
         userModel = UserModel.fromMap(data1.data());
@@ -160,7 +118,6 @@ class _HelloVendorState extends State<HelloVendor> {
           // usersList.add(dataUser);
           usersList.add(userModel);
         });
-        print("MILLLLL -->  ${usersList[0].name}");
       }
     });
   }
@@ -170,7 +127,7 @@ class _HelloVendorState extends State<HelloVendor> {
   @override
   Widget build(BuildContext context) {
     getScheduledOrders();
-    print('number of current user is ${currentUser?.phoneNumber}');
+
     _getVendor();
     _getOrders();
 
@@ -220,7 +177,7 @@ class _HelloVendorState extends State<HelloVendor> {
                     ],
                   ),
                 ),
-                orderList.length >= 1
+                orderList.isNotEmpty
                     ? SizedBox(
                         height: MediaQuery.of(context).size.height * 0.4,
                         child: ListView.builder(
@@ -566,10 +523,16 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                   color: Colors
                                                                       .white),
                                                             ),
-                                                            child: const Icon(
-                                                              Icons.close,
-                                                              color:
-                                                                  Colors.white,
+                                                            child: IconButton(
+                                                              onPressed: () {
+                                                                Navigator.pop(
+                                                                    context);
+                                                              },
+                                                              icon: const Icon(
+                                                                Icons.close,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
@@ -637,8 +600,8 @@ class _HelloVendorState extends State<HelloVendor> {
                             }))
                     : SizedBox(
                         height: MediaQuery.of(context).size.height * 0.37,
-                        child: Center(child: Text('Data not Found'))),
-                Container(
+                        child: const Center(child: Text('No New Orders'))),
+                SizedBox(
                     width: MediaQuery.of(context).size.width * 0.9,
                     child: Column(
                       children: [
@@ -659,7 +622,7 @@ class _HelloVendorState extends State<HelloVendor> {
                                 height:
                                     MediaQuery.of(context).size.height * 0.3,
                                 child: ListView.builder(
-                                    itemCount: 2,
+                                    itemCount: scheduledorderList.length,
                                     itemBuilder: (context, index) {
                                       // print(
                                       //     'kkkkkkkkkkkkkkkkkkkkkkkk${scheduledorderList)}');
@@ -671,7 +634,8 @@ class _HelloVendorState extends State<HelloVendor> {
                                                     .width) *
                                                 0.9,
                                             padding: const EdgeInsets.all(25),
-                                            margin: EdgeInsets.only(bottom: 20),
+                                            margin: const EdgeInsets.only(
+                                                bottom: 20),
                                             decoration: BoxDecoration(
                                                 color: Colors.white,
                                                 boxShadow: [
@@ -691,15 +655,15 @@ class _HelloVendorState extends State<HelloVendor> {
                                               children: [
                                                 Row(
                                                   children: [
-                                                    CircleAvatar(
-                                                      radius: 35.0,
-                                                      backgroundImage:
-                                                          NetworkImage(
-                                                              usersList[index]
-                                                                  .imgUrl),
-                                                      backgroundColor:
-                                                          Colors.transparent,
-                                                    ),
+                                                    // CircleAvatar(
+                                                    //   radius: 35.0,
+                                                    //   backgroundImage:
+                                                    //       NetworkImage(
+                                                    //           usersList[index]
+                                                    //               .imgUrl),
+                                                    //   backgroundColor:
+                                                    //       Colors.transparent,
+                                                    // ),
                                                     const SizedBox(width: 20),
                                                     Column(
                                                       crossAxisAlignment:
@@ -707,19 +671,20 @@ class _HelloVendorState extends State<HelloVendor> {
                                                               .start,
                                                       children: <Widget>[
                                                         Text(
-                                                          usersList[index]
+                                                          usersList[0]
                                                               .name
                                                               .toString(),
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              fontSize: 23),
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize: 23),
                                                           textAlign:
                                                               TextAlign.start,
                                                         ),
                                                         Text(
-                                                          usersList[index]
+                                                          usersList[0]
                                                               .address
                                                               .toString(),
                                                           textAlign:
@@ -794,7 +759,7 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                           orders:
                                                                               scheduledorderList[index],
                                                                           users:
-                                                                              usersList[index],
+                                                                              usersList[0],
                                                                         )));
                                                       },
                                                       child: const Text(
@@ -848,12 +813,12 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                                                 children: <Widget>[
                                                                                   Text(
-                                                                                    usersList[index].name.toString(),
+                                                                                    usersList[0].name.toString(),
                                                                                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
                                                                                     textAlign: TextAlign.start,
                                                                                   ),
                                                                                   Text(
-                                                                                    usersList[index].address.toString(),
+                                                                                    usersList[0].address.toString(),
                                                                                     textAlign: TextAlign.start,
                                                                                   )
                                                                                 ],
@@ -965,7 +930,7 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                           InkWell(
                                                                             onTap:
                                                                                 () {
-                                                                              var snackBar = SnackBar(content: Text('Please Check the Box'));
+                                                                              var snackBar = const SnackBar(content: Text('Please Check the Box'));
                                                                               isagreed
                                                                                   ? showDialog(
                                                                                       context: context,
@@ -976,7 +941,14 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                             child: Column(
                                                                                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                                                                                               children: [
-                                                                                                Align(alignment: Alignment.centerRight, child: IconButton(onPressed: () {}, icon: const Icon(Icons.close))),
+                                                                                                Align(
+                                                                                                    alignment: Alignment.centerRight,
+                                                                                                    child: IconButton(
+                                                                                                        onPressed: () {
+                                                                                                          print("2");
+                                                                                                          Navigator.pop(context);
+                                                                                                        },
+                                                                                                        icon: const Icon(Icons.close))),
                                                                                                 const Text(
                                                                                                   'Confirmed the weight of the parcel?',
                                                                                                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -1006,7 +978,12 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                                                       Row(
                                                                                                                         mainAxisAlignment: MainAxisAlignment.end,
                                                                                                                         children: [
-                                                                                                                          IconButton(onPressed: () {}, icon: const Icon(Icons.close))
+                                                                                                                          IconButton(
+                                                                                                                              onPressed: () {
+                                                                                                                                print('3');
+                                                                                                                                Navigator.pop(context);
+                                                                                                                              },
+                                                                                                                              icon: const Icon(Icons.close))
                                                                                                                         ],
                                                                                                                       ),
                                                                                                                       const Text(
@@ -1037,22 +1014,33 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                                                         ),
                                                                                                                       ),
                                                                                                                       InkWell(
-                                                                                                                        onTap: () {
+                                                                                                                        onTap: () async {
                                                                                                                           FirebaseFirestore db = FirebaseFirestore.instance;
 
-                                                                                                                          final updateStatus = db.collection("orders").doc(orderList[index].trackingId);
-                                                                                                                          updateStatus.update({"weight": weightcontroller.text}).then((value) => log(""), onError: (e) => log("Error updating document $e"));
+                                                                                                                          final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
+                                                                                                                          await updateStatus.update({
+                                                                                                                            "weight": weightcontroller.text,
+                                                                                                                            "orderStatus": "picked"
+                                                                                                                          }).then((value) {
+                                                                                                                            print("done");
+                                                                                                                          });
                                                                                                                           //updateData(id1, id2, n),
 
                                                                                                                           showDialog(
                                                                                                                               context: context,
                                                                                                                               builder: (_) => AlertDialog(
-                                                                                                                                      content: Container(
+                                                                                                                                      content: SizedBox(
                                                                                                                                     height: (MediaQuery.of(context).size.height) * 0.21,
                                                                                                                                     child: Column(
                                                                                                                                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                                                                                                                                       children: [
-                                                                                                                                        Align(alignment: Alignment.centerRight, child: IconButton(onPressed: () {}, icon: const Icon(Icons.close))),
+                                                                                                                                        Align(
+                                                                                                                                            alignment: Alignment.centerRight,
+                                                                                                                                            child: IconButton(
+                                                                                                                                                onPressed: () {
+                                                                                                                                                  Navigator.pop(context);
+                                                                                                                                                },
+                                                                                                                                                icon: const Icon(Icons.close))),
                                                                                                                                         const Text(
                                                                                                                                           'You have Successfully Completed your pickup',
                                                                                                                                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -1065,6 +1053,9 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                                                                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                                                                                                           children: [
                                                                                                                                             InkWell(
+                                                                                                                                              onTap: () {
+                                                                                                                                                Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
+                                                                                                                                              },
                                                                                                                                               child: Container(
                                                                                                                                                 height: (MediaQuery.of(context).size.height) * 0.07,
                                                                                                                                                 width: (MediaQuery.of(context).size.width) * 0.65,
@@ -1098,15 +1089,28 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                                     ),
                                                                                                     InkWell(
                                                                                                       onTap: () {
+                                                                                                        FirebaseFirestore db = FirebaseFirestore.instance;
+
+                                                                                                        final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
+                                                                                                        updateStatus.update({"orderStatus": "picked"}).then((value) {
+                                                                                                          print("done");
+                                                                                                        });
+                                                                                                        //updateData(id1, id2, n),
                                                                                                         showDialog(
                                                                                                             context: context,
                                                                                                             builder: (_) => AlertDialog(
-                                                                                                                    content: Container(
+                                                                                                                    content: SizedBox(
                                                                                                                   height: (MediaQuery.of(context).size.height) * 0.21,
                                                                                                                   child: Column(
                                                                                                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                                                                                                     children: [
-                                                                                                                      Align(alignment: Alignment.centerRight, child: IconButton(onPressed: () {}, icon: const Icon(Icons.close))),
+                                                                                                                      Align(
+                                                                                                                          alignment: Alignment.centerRight,
+                                                                                                                          child: IconButton(
+                                                                                                                              onPressed: () {
+                                                                                                                                Navigator.pop(context);
+                                                                                                                              },
+                                                                                                                              icon: const Icon(Icons.close))),
                                                                                                                       const Text(
                                                                                                                         'You have Successfully Completed your pickup',
                                                                                                                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -1119,6 +1123,9 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                                                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                                                                                         children: [
                                                                                                                           InkWell(
+                                                                                                                            onTap: () {
+                                                                                                                              Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
+                                                                                                                            },
                                                                                                                             child: Container(
                                                                                                                               height: (MediaQuery.of(context).size.height) * 0.07,
                                                                                                                               width: (MediaQuery.of(context).size.width) * 0.65,
@@ -1131,7 +1138,6 @@ class _HelloVendorState extends State<HelloVendor> {
                                                                                                                     ],
                                                                                                                   ),
                                                                                                                 )));
-                                                                                                        Navigator.pop(context);
                                                                                                       },
                                                                                                       child: Container(
                                                                                                         height: (MediaQuery.of(context).size.height) * 0.07,
@@ -1181,7 +1187,8 @@ class _HelloVendorState extends State<HelloVendor> {
                             : SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.3,
-                                child: Center(child: Text('Data not Found'))),
+                                child: const Center(
+                                    child: Text('No Scheduled Orders'))),
                       ],
                     )),
                 Container(
@@ -1283,301 +1290,3 @@ class _HelloVendorState extends State<HelloVendor> {
     );
   }
 }
-
-
-
-
-
-
-/*
-showDialog(
-context: context,
-builder: (_) => AlertDialog(
-
-*/
-/*content: Container(
-                                    height: (MediaQuery.of(context).size.height)*0.5,
-                                    decoration: BoxDecoration(
-                                      //color: Colors.grey,
-                                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                                        //color: Colors.orange
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            const CircleAvatar(
-                                              radius: 35.0,
-                                              backgroundImage:
-                                              NetworkImage('https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'),
-                                              backgroundColor: Colors.transparent,
-                                            ),
-                                            const SizedBox(width: 20),
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: const <Widget>[
-                                                Text('Mukesh Mehta',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 23),textAlign: TextAlign.start,),
-                                                Text('Delhi',textAlign: TextAlign.start,)
-                                              ],
-                                            ),
-                                          ],
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Pickup Address  : '),
-                                              Expanded(child: Text('O87 Outer ring road Delhi, 111043 more address',style: TextStyle(fontWeight: FontWeight.bold)))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Pickup Date  : '),
-                                              Expanded(child: Text('11/05/2022',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Length  : '),
-                                              Expanded(child: Text('30 cm',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Breadth  : '),
-                                              Expanded(child: Text('30 cm',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Height  : '),
-                                              Expanded(child: Text('30 cm',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Weight of the package  : '),
-                                              Expanded(child: Text('7 kg',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Content of the package  : '),
-                                              Expanded(child: Text('Laptop',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Mode of Payment  : '),
-                                              Expanded(child: Text('COD',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Amount  : '),
-                                              Expanded(child: Text('5628',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                            children:const [
-                                              Text('Type of shipment  : '),
-                                              Expanded(child: Text('Domestic',style: TextStyle(fontWeight: FontWeight.bold),))
-                                            ]
-
-                                        ),
-                                        Row(
-                                          children: <Widget>[
-                                            Checkbox(onChanged: (bool? value) =><dynamic>{}, value: isagreed ),
-                                            const Text("I have received the cash")
-                                          ],
-                                        ),
-                                        InkWell(
-                                          child: Container(
-                                            height: (MediaQuery.of(context).size.height)*0.07,
-                                            width: (MediaQuery.of(context).size.width)*0.8,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.all(Radius.circular(10)),
-                                              color: Colors.orange
-                                            ),
-                                            child: Center(child: Text('Proceed',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 22))),
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),*//*
-
-
-
-*/
-/*content: Container(
-                                      height: (MediaQuery.of(context).size.height)*0.3,
-                                      decoration: const BoxDecoration(
-                                        //color: Colors.grey,
-                                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                                        //color: Colors.orange
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(onPressed: (){}, icon: const Icon(Icons.close))
-                                            ],
-                                          ),
-
-                                          const Text('Enter the weight of the package',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),
-                                          Container(
-                                            height: (MediaQuery.of(context).size.height)*0.05,
-                                            padding: EdgeInsets.only(left: 15,right: 15),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(color: Colors.grey,width: 1),
-                                              borderRadius: const BorderRadius.all(Radius.circular(10))
-                                            ),
-                                            child: Row(
-                                              children: const <Widget>[
-                                                Flexible(
-                                                  child: TextField(
-                                                    decoration: InputDecoration(
-                                                      hintText: 'Weight',
-                                                      border: InputBorder.none
-
-                                                    ),
-
-                                                  ),
-                                                ),
-                                                Expanded(child: Align(alignment: Alignment.centerRight,child: Text('Kg',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: Colors.orange),),))
-                                              ],
-                                            ),
-                                          ),
-                                          InkWell(
-                                            child: Container(
-                                              height: (MediaQuery.of(context).size.height)*0.07,
-                                              width: (MediaQuery.of(context).size.width)*0.8,
-                                              decoration: const BoxDecoration(
-                                                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                  color: Colors.orange
-                                              ),
-                                              child: const Center(child: Text('Next',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 22))),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                    )*//*
-
-
-*/
-/* content: Container(
-                                      height: (MediaQuery.of(context).size.height)*0.21,
-                                      decoration: const BoxDecoration(
-                                        //color: Colors.grey,
-                                        //borderRadius: BorderRadius.all(Radius.circular(50)),
-                                        //color: Colors.orange
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-
-
-                                          Align(
-                                            alignment:Alignment.centerRight,
-                                              child: IconButton(onPressed: (){}, icon: const Icon(Icons.close))
-                                          ),
-
-
-                                          const Text('Confirmed the weight of the parcel?',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
-                                          SizedBox(
-                                            height: 20,
-                                          ),
-
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              InkWell(
-                                                child: Container(
-                                                  height: (MediaQuery.of(context).size.height)*0.07,
-                                                  width: (MediaQuery.of(context).size.width)*0.3,
-                                                  decoration: const BoxDecoration(
-                                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                      color: Colors.orange
-                                                  ),
-                                                  child: const Center(child: Text('Edit Weight',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                ),
-                                              ),
-
-                                              InkWell(
-                                                child: Container(
-                                                  height: (MediaQuery.of(context).size.height)*0.07,
-                                                  width: (MediaQuery.of(context).size.width)*0.3,
-                                                  decoration: const BoxDecoration(
-                                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                                      color: Colors.orange
-                                                  ),
-                                                  child: const Center(child: Text('Yes',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-
-                                        ],
-                                      ),
-                                    )*//*
-
-content: Container(
-height: (MediaQuery.of(context).size.height)*0.21,
-width: MediaQuery.of(context).size.width*0.65,
-decoration: const BoxDecoration(
-//color: Colors.grey,
-//borderRadius: BorderRadius.all(Radius.circular(50)),
-//color: Colors.orange
-),
-child: Column(
-mainAxisAlignment: MainAxisAlignment.spaceAround,
-children: [
-
-
-Align(
-alignment:Alignment.centerRight,
-child: IconButton(onPressed: (){}, icon: const Icon(Icons.close))
-),
-
-
-const Text('You have Successfully Completed your pickup',style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
-const SizedBox(
-height: 20,
-),
-
-Row(
-mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-children: [
-
-
-InkWell(
-child: Container(
-height: (MediaQuery.of(context).size.height)*0.07,
-width: (MediaQuery.of(context).size.width)*0.65,
-decoration: const BoxDecoration(
-borderRadius: BorderRadius.all(Radius.circular(10)),
-color: Colors.orange
-),
-child: const Center(child: Text('Go To Home',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 15))),
-),
-),
-],
-),
-
-],
-),
-)
-
-
-)
-);*/

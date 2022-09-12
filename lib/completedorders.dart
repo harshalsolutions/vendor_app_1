@@ -43,7 +43,7 @@ class _CompletedOrdersState extends State<CompletedOrders> {
     await FirebaseFirestore.instance
         .collection('Orders')
         .where('vid', isEqualTo: vendorid)
-        .where('orderStatus', isEqualTo: 'completed')
+        .where('orderStatus', isEqualTo: 'complete')
         .get()
         .then((value) {
       completedOrderList.clear();
@@ -73,13 +73,12 @@ class _CompletedOrdersState extends State<CompletedOrders> {
         .get()
         .then((value) {
       //(imgUrl, uid, address, phone, name, email)
-      print('the user data is ${value.docs[index].data()['name']}');
-      print(value.docs[index].data()['name']);
+
       name = value.docs[index].data()['name'];
-      print(name);
+
       address = value.docs[index].data()['address'];
-      print(address);
-      image = value.docs[index].data()['imgUrl'];
+
+      // image = value.docs[index].data()['imgUrl'];
 
       usersList.clear();
       for (var data1 in value.docs) {
@@ -90,7 +89,6 @@ class _CompletedOrdersState extends State<CompletedOrders> {
           // usersList.add(dataUser);
           usersList.add(userModel);
         });
-        print("MILLLLL -->  ${usersList[0].name}");
       }
     });
     return {"name": name, 'address': address};
@@ -122,7 +120,7 @@ class _CompletedOrdersState extends State<CompletedOrders> {
                     ],
                   ),
                 ),
-                completedOrderList.length >= 1
+                completedOrderList.isNotEmpty
                     ? SizedBox(
                         height: MediaQuery.of(context).size.height * 0.8,
                         width: MediaQuery.of(context).size.width * 0.9,
@@ -140,7 +138,7 @@ class _CompletedOrdersState extends State<CompletedOrders> {
                                       MaterialPageRoute(
                                           builder: (context) =>
                                               CompletedOrderDetail(
-                                                user: usersList[index],
+                                                user: usersList[0],
                                                 orders:
                                                     completedOrderList[index],
                                               )));
@@ -167,22 +165,20 @@ class _CompletedOrdersState extends State<CompletedOrders> {
                                       children: [
                                         Row(
                                           children: [
-                                            CircleAvatar(
-                                              radius: 35.0,
-                                              backgroundImage: NetworkImage(
-                                                  usersList[index].imgUrl),
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                            ),
+                                            // CircleAvatar(
+                                            //   radius: 35.0,
+                                            //   backgroundImage: NetworkImage(
+                                            //       usersList[0].imgUrl),
+                                            //   backgroundColor:
+                                            //       Colors.transparent,
+                                            // ),
                                             const SizedBox(width: 20),
                                             Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: <Widget>[
                                                 Text(
-                                                  usersList[index]
-                                                      .name
-                                                      .toString(),
+                                                  usersList[0].name.toString(),
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
@@ -190,7 +186,7 @@ class _CompletedOrdersState extends State<CompletedOrders> {
                                                   textAlign: TextAlign.start,
                                                 ),
                                                 Text(
-                                                  usersList[index]
+                                                  usersList[0]
                                                       .address
                                                       .toString(),
                                                   textAlign: TextAlign.start,
@@ -236,7 +232,7 @@ class _CompletedOrdersState extends State<CompletedOrders> {
                       )
                     : SizedBox(
                         height: MediaQuery.of(context).size.height * 0.3,
-                        child: Center(child: Text('Data not Found')))
+                        child: const Center(child: Text('No Completed Orders')))
               ],
             )),
           ),

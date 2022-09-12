@@ -62,12 +62,27 @@ class OrderModel {
         deliveryAdrs = map['deliveryAdrs'] ?? "",
         deliveryPin = map['deliveryPin'] ?? "",
         pickupPin = map['pickupPin'] ?? "",
-        weight = map['weight'] ?? "",
-        length = map['length'] ?? "",
-        breadth = map['breadth'] ?? "",
-        height = map['height'] ?? "",
+        weight = parseDouble(map['weight']),
+        length = parseDouble(map['length']),
+        breadth = parseDouble(map['breadth']),
+        height = parseDouble(map['height']),
         orderStatus = map["orderStatus"] ?? "",
-        packageValue = map['packageValue'] ?? "",
+        packageValue = parseDouble(map['packageValue']),
         shipmentType = map['shipmentType'] ?? "",
         pickupTime = map['pickupTime'] ?? "";
+}
+
+double parseDouble(dynamic value) {
+  try {
+    if (value is String) {
+      return double.parse(value);
+    } else if (value is double) {
+      return value;
+    } else {
+      return 0.0;
+    }
+  } catch (e) {
+    // return null if double.parse fails
+    return 0;
+  }
 }
