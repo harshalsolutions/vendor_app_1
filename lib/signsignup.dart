@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 //import 'package:url_launcher/url_launcher.dart';
 import 'package:vendor_app/termsandcond.dart';
 import 'otp.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({Key? key}) : super(key: key);
@@ -120,6 +119,8 @@ class _SignInState extends State<SignIn> {
               child: Center(
                 child: InkWell(
                   onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Wrong OTP")));
                     sendOTP(context, mobileNumber);
                     Navigator.push(
                         context,

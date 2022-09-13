@@ -56,6 +56,9 @@ class _CompletedOrdersState extends State<CompletedOrders> {
           data = data1;
         });
       }
+      setState(() {
+        completedOrderList = completedOrderList.reversed.toList();
+      });
     });
   }
 
@@ -66,20 +69,13 @@ class _CompletedOrdersState extends State<CompletedOrders> {
   List<UserModel> usersList = [];
 
   Map dataUser = {};
-  getUsers(int index) async {
+  Future<Map<dynamic, dynamic>> getUsers(int index) async {
+    Map map = {};
     await FirebaseFirestore.instance
         .collection('Users')
         .where('uid', isEqualTo: completedOrderList[index].uid)
         .get()
         .then((value) {
-      //(imgUrl, uid, address, phone, name, email)
-
-      name = value.docs[index].data()['name'];
-
-      address = value.docs[index].data()['address'];
-
-      // image = value.docs[index].data()['imgUrl'];
-
       usersList.clear();
       for (var data1 in value.docs) {
         userModel = UserModel.fromMap(data1.data());
@@ -87,11 +83,16 @@ class _CompletedOrdersState extends State<CompletedOrders> {
         setState(() {
           dataUser = data1.data();
           // usersList.add(dataUser);
+          map = {
+            "name": data1['name'],
+            'address': data1['address'],
+            'image': data1['image']
+          };
           usersList.add(userModel);
         });
       }
     });
-    return {"name": name, 'address': address};
+    return map;
   }
 
   @override
@@ -127,107 +128,129 @@ class _CompletedOrdersState extends State<CompletedOrders> {
                         child: ListView.builder(
                             itemCount: completedOrderList.length,
                             itemBuilder: (context, index) {
-                              getUsers(index);
-                              //print(index);
-                              // print(getUsers(index).['name']);
-
-                              return InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              CompletedOrderDetail(
-                                                user: usersList[0],
-                                                orders:
-                                                    completedOrderList[index],
-                                              )));
-                                },
-                                child: Container(
-                                    margin: EdgeInsets.only(top: 25),
-                                    width: (MediaQuery.of(context).size.width) *
-                                        0.9,
-                                    padding: const EdgeInsets.all(25),
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.5),
-                                            spreadRadius: 5,
-                                            blurRadius: 7,
-                                            offset: const Offset(0,
-                                                3), // changes position of shadow
-                                          ),
-                                        ],
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(20))),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            // CircleAvatar(
-                                            //   radius: 35.0,
-                                            //   backgroundImage: NetworkImage(
-                                            //       usersList[0].imgUrl),
-                                            //   backgroundColor:
-                                            //       Colors.transparent,
-                                            // ),
-                                            const SizedBox(width: 20),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                Text(
-                                                  usersList[0].name.toString(),
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 23),
-                                                  textAlign: TextAlign.start,
+                              return FutureBuilder(
+                                  future: getUsers(index),
+                                  builder: (context, snapshot) {
+                                    var userdata = {};
+                                    if (snapshot.hasData) {
+                                      userdata = snapshot.data
+                                          as Map<dynamic, dynamic>;
+                                    }
+                                    return InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    CompletedOrderDetail(
+                                                      user: usersList[0],
+                                                      orders:
+                                                          completedOrderList[
+                                                              index],
+                                                    )));
+                                      },
+                                      child: Container(
+                                          margin: EdgeInsets.only(top: 25),
+                                          width: (MediaQuery.of(context)
+                                                  .size
+                                                  .width) *
+                                              0.9,
+                                          padding: const EdgeInsets.all(25),
+                                          decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.grey
+                                                      .withOpacity(0.5),
+                                                  spreadRadius: 5,
+                                                  blurRadius: 7,
+                                                  offset: const Offset(0,
+                                                      3), // changes position of shadow
                                                 ),
-                                                Text(
-                                                  usersList[0]
-                                                      .address
-                                                      .toString(),
-                                                  textAlign: TextAlign.start,
-                                                )
                                               ],
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                      Radius.circular(20))),
+                                          child: Column(
                                             children: [
-                                              const Text('Pickup Address  : '),
-                                              Expanded(
-                                                  child: Text(
-                                                      completedOrderList[index]
-                                                          .pickupAdrs))
-                                            ]),
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Container(
-                                            margin: EdgeInsets.only(top: 15),
-                                            padding: const EdgeInsets.only(
-                                                top: 5,
-                                                bottom: 5,
-                                                left: 30,
-                                                right: 30),
-                                            decoration: const BoxDecoration(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(20)),
-                                                color: Color(0xff4BC600)),
-                                            child: const Text(
-                                              'Completed',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                        )
-                                      ],
-                                    )),
-                              );
+                                              Row(
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 35.0,
+                                                    backgroundImage:
+                                                        NetworkImage(
+                                                            userdata['image']),
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                  ),
+                                                  const SizedBox(width: 20),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: <Widget>[
+                                                      Text(
+                                                        userdata['name'],
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 23),
+                                                        textAlign:
+                                                            TextAlign.start,
+                                                      ),
+                                                      Text(
+                                                        userdata['address'],
+                                                        textAlign:
+                                                            TextAlign.start,
+                                                      )
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                        'Pickup Address  : '),
+                                                    Expanded(
+                                                        child: Text(
+                                                            completedOrderList[
+                                                                    index]
+                                                                .pickupAdrs))
+                                                  ]),
+                                              Align(
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Container(
+                                                  margin:
+                                                      EdgeInsets.only(top: 15),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 5,
+                                                          bottom: 5,
+                                                          left: 30,
+                                                          right: 30),
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                                  Radius
+                                                                      .circular(
+                                                                          20)),
+                                                          color: Color(
+                                                              0xff4BC600)),
+                                                  child: const Text(
+                                                    'Completed',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          )),
+                                    );
+                                  });
                             }),
                       )
                     : SizedBox(

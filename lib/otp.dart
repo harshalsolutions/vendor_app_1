@@ -66,16 +66,19 @@ class _OtpVerifyState extends State<OtpVerify> {
   Future<void> sendOtp(BuildContext context, String number) async {
     String phone = number.trim();
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phone,
-      verificationCompleted: (PhoneAuthCredential credential) async {},
-      verificationFailed: (FirebaseAuthException e) {},
-      codeSent: (String verificationId, int? resendToken) async {
-        Navigator.pushNamed(context, '/third',
-            arguments: {'verificationId': verificationId, 'phone': phone});
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {},
-    );
+    await FirebaseAuth.instance
+        .verifyPhoneNumber(
+          phoneNumber: phone,
+          verificationCompleted: (PhoneAuthCredential credential) async {},
+          verificationFailed: (FirebaseAuthException e) {},
+          codeSent: (String verificationId, int? resendToken) async {
+            Navigator.pushNamed(context, '/third',
+                arguments: {'verificationId': verificationId, 'phone': phone});
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {},
+        )
+        .then((value) => ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("OTP sent"))));
   }
 
   Future<void> verifyUser1(
@@ -112,7 +115,6 @@ class _OtpVerifyState extends State<OtpVerify> {
     String email,
   ) async {
     String otp = otpCode.trim();
-    print('Verify user is running');
 
     PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: verificationId, smsCode: otp);
@@ -142,14 +144,12 @@ class _OtpVerifyState extends State<OtpVerify> {
                   .doc(value.user!.uid.substring(0, 20))
                   .set(userDetails)
                   .then((value) {
-                print('in if conditions');
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => SignIn()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const SignIn()));
                 //Change Screen
                 //  Navigator.pushNamed(context, '/fifth', arguments: {});
               });
             } else {
-              print('in if conditions');
               Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -242,6 +242,8 @@ class _OtpVerifyState extends State<OtpVerify> {
                   print(
                       'Current vendor is ${currentVendor.get().then((value) => print('vendordata ${value.docs[0]}'))}');
 */
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(const SnackBar(content: Text("OTP sent")));
                   if (widget.verificationId.isEmpty && widget.phone.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Wrong OTP")));
@@ -259,7 +261,6 @@ class _OtpVerifyState extends State<OtpVerify> {
                     // verifyOTP(
                     //     context, pin, widget.verificationId);
                   }
-                  print("Completed: $pin");
                 },
               ),
             ),
@@ -314,8 +315,6 @@ class _OtpVerifyState extends State<OtpVerify> {
                                 builder: (context) => Otp2(
                                       phone: widget.phone,
                                     )));
-                        print('tapped');
-                        // launchUrl((Uri.parse('http://stackoverflow.com')));
                       },
                   ),
                 ],
@@ -634,7 +633,7 @@ class Otp2 extends StatefulWidget {
 }
 
 class _Otp2State extends State<Otp2> {
-  Duration myDuration = Duration(seconds: 30);
+  Duration myDuration = const Duration(seconds: 30);
 
   String strDigits(int n) => n.toString().padLeft(2, '0');
 
@@ -649,7 +648,7 @@ class _Otp2State extends State<Otp2> {
 
   void startTimer() {
     const oneSec = Duration(seconds: 1);
-    _timer = new Timer.periodic(
+    _timer = Timer.periodic(
       oneSec,
       (Timer timer) {
         if (_start == 0) {
@@ -671,6 +670,7 @@ class _Otp2State extends State<Otp2> {
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(

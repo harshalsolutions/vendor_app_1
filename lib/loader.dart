@@ -13,8 +13,7 @@ class _LoaderState extends State<Loader> {
     return Scaffold(
       body: Center(
         child: RotationTransition(
-          
-          turns: AlwaysStoppedAnimation(90/360),
+          turns: const AlwaysStoppedAnimation(90 / 360),
           child: Container(
             color: Colors.grey,
             width: 300,
@@ -27,6 +26,7 @@ class _LoaderState extends State<Loader> {
     );
   }
 }
+
 class FaceOutlinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -37,8 +37,10 @@ class FaceOutlinePainter extends CustomPainter {
 
     Path path = Path();
     path.moveTo(size.width / 3, 0); //Ax, Ay
-    path.quadraticBezierTo(size.width, size.height / 8, size.width / 3, size.height / 4); //Bx, By, Cx, Cy
-    path.quadraticBezierTo(0, 3 * size.height / 8, size.width / 2, size.height / 2); //Dx, Dy, Ex, Ey
+    path.quadraticBezierTo(size.width, size.height / 8, size.width / 3,
+        size.height / 4); //Bx, By, Cx, Cy
+    path.quadraticBezierTo(0, 3 * size.height / 8, size.width / 2,
+        size.height / 2); //Dx, Dy, Ex, Ey
     canvas.drawPath(path, paint);
   }
 

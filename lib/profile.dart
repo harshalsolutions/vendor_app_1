@@ -21,13 +21,13 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-
 class _ProfilePageState extends State<ProfilePage> {
   final storage = FirebaseStorage.instance;
   final storageRef = FirebaseStorage.instance
       .ref('UserProfiles/${FirebaseAuth.instance.currentUser!.uid}');
 
-  String imageUrl = 'https://www.kindpng.com/picc/m/24-248253_user-profile-default-image-png-clipart-png-download.png';
+  String imageUrl =
+      'https://www.kindpng.com/picc/m/24-248253_user-profile-default-image-png-clipart-png-download.png';
 
   File? imageFile;
 
@@ -51,7 +51,6 @@ class _ProfilePageState extends State<ProfilePage> {
         .child(FirebaseAuth.instance.currentUser!.uid)
         .putFile(imageFile!);
 
-
     TaskSnapshot snapshot = await uploadTask;
     String imageUrl = await snapshot.ref.getDownloadURL();
     _addImageInFirebase(imageUrl);
@@ -64,8 +63,8 @@ class _ProfilePageState extends State<ProfilePage> {
         .set({
       'image': url,
     }, SetOptions(merge: true)).whenComplete(() {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Updated")));
-
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Updated")));
     });
     if (mounted) {
       setState(() {
@@ -78,8 +77,8 @@ class _ProfilePageState extends State<ProfilePage> {
     showModalBottomSheet(
         backgroundColor: Colors.transparent,
         constraints: const BoxConstraints(
-          //minHeight: MediaQuery.of(context).size.height*0.7,
-        ),
+            //minHeight: MediaQuery.of(context).size.height*0.7,
+            ),
         isScrollControlled: true,
         context: context,
         builder: (BuildContext context) {
@@ -88,61 +87,65 @@ class _ProfilePageState extends State<ProfilePage> {
               borderRadius: BorderRadius.all(Radius.circular(15)),
               color: Colors.orange,
             ),
-            padding: EdgeInsets.all(MediaQuery.of(context).size.height*0.04),
+            padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.04),
             //height: 0.75,
-            height:  MediaQuery.of(context).size.height*0.33,
-
-
+            height: MediaQuery.of(context).size.height * 0.33,
 
             child: Column(
-
               children: <Widget>[
-
                 Container(
                     decoration: const BoxDecoration(
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(16.0),
                         topRight: Radius.circular(16.0),
                       ),
-
                     ),
                     child: Column(
                       children: <Widget>[
-
                         Container(
-                          //padding: EdgeInsets.only(top: MediaQuery.of(context).size.height*0.05),
+                            //padding: EdgeInsets.only(top: MediaQuery.of(context).size.height*0.05),
                             decoration: const BoxDecoration(
-                                border: Border(bottom: BorderSide(width: 1,color: Colors.white30))
-                            ),
-                            child:  ListTile(
-                              leading:  Icon(Icons.photo_library_rounded),
+                                border: Border(
+                                    bottom: BorderSide(
+                                        width: 1, color: Colors.white30))),
+                            child: ListTile(
+                              leading: Icon(Icons.photo_library_rounded),
                               //Icon(Icons.phone_locked),
-                              title: InkWell(onTap: (){
-                                pickImage(ImageSource.gallery);
-                              },child:  Text('Gallery',style: TextStyle(fontSize: 25,fontWeight: FontWeight.w500),)),)
-
-
-                        ),
+                              title: InkWell(
+                                  onTap: () {
+                                    pickImage(ImageSource.gallery);
+                                  },
+                                  child: const Text(
+                                    'Gallery',
+                                    style: TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.w500),
+                                  )),
+                            )),
                         Container(
-                          //padding: EdgeInsets.only(top: MediaQuery.of(context).size.height*0.05),
+                            //padding: EdgeInsets.only(top: MediaQuery.of(context).size.height*0.05),
                             decoration: const BoxDecoration(
-                              //border: Border(bottom: BorderSide(width: 1,color: Colors.white))
-                            ),
-                            child:   ListTile(
+                                //border: Border(bottom: BorderSide(width: 1,color: Colors.white))
+                                ),
+                            child: ListTile(
                               leading: const Icon(Icons.camera_alt),
                               //Icon(Icons.phone_locked),
-                              title: InkWell(onTap: (){
-
-                                pickImage(ImageSource.camera);
-                              },child: const Text('Camera',style: TextStyle(fontSize: 25,fontWeight: FontWeight.w500),)),)
-
-
-                        ),
-                        ElevatedButton(onPressed: (){
-                          print('clicked');
-                          _uploadData();
-                        }
-                            , child: Text('1'))
+                              title: InkWell(
+                                  onTap: () {
+                                    pickImage(ImageSource.camera);
+                                  },
+                                  child: const Text(
+                                    'Camera',
+                                    style: TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.w500),
+                                  )),
+                            )),
+                        ElevatedButton(
+                            onPressed: () {
+                              _uploadData();
+                            },
+                            child: const Text('Upload'))
                         /*OutlinedButton(
                           style: OutlinedButton.styleFrom(
 
@@ -157,71 +160,69 @@ class _ProfilePageState extends State<ProfilePage> {
                             style: TextStyle(fontSize: 14),
                           ),
                         ),*/
-
-
-
                       ],
                     )),
-
               ],
             ),
           );
         });
   }
+
   String userImage = '';
   var name = '';
   var company = '';
-  var phone= '';
+  var phone = '';
   var mail = '';
   User? currentUser = FirebaseAuth.instance.currentUser;
   late VendorModel vendormodel;
   List<VendorModel> vendorList = [];
-  _getVendor()async{
-    await FirebaseFirestore.instance.collection('Vendors')
-        .where('phone',isEqualTo: currentUser?.phoneNumber?.substring(3))
+  _getVendor() async {
+    await FirebaseFirestore.instance
+        .collection('Vendors')
+        .where('phone', isEqualTo: currentUser?.phoneNumber?.substring(3))
         .get()
         .then((value) {
-      for(var data1 in value.docs){
-        print('Data ka data TTTTTTTTTTTTt${data1.data().toString()}');
-        log(data1['name']);
+      if (value.docs.isEmpty) {
+        data = "";
+      } else {
+        for (var data1 in value.docs) {
+          log(data1['name']);
 
-        setState((){
+          setState(() {
+            data = data1;
+            userImage = data['image'];
+            //vendorid = data1['vid'];
 
-          data = data1;
-          userImage = data['image'];
-          //vendorid = data1['vid'];
-
-          //print('data of vid is ${data.toString()}');
-        });
-
-
+            //print('data of vid is ${data.toString()}');
+          });
+        }
       }
-      print("FFFFFFFFFFFFF$userImage");
+
       // /data = value.data();
       //print(data1['name']);
       //log(data['address']);
-
     });
 
     //print(data[0][0]['name']);
   }
 
-  TextEditingController namecontroller = TextEditingController(text: data['name']);
-  TextEditingController companyname = TextEditingController(text: data['companyName']);
-  TextEditingController phonenumber = TextEditingController(text: data['phone']);
+  TextEditingController namecontroller =
+      TextEditingController(text: data['name']);
+  TextEditingController companyname =
+      TextEditingController(text: data['companyName']);
+  TextEditingController phonenumber =
+      TextEditingController(text: data['phone']);
   TextEditingController email = TextEditingController(text: data['email']);
   @override
   void initState() {
-    _getVendor();
-    // TODO: implement initState
     super.initState();
+    _getVendor();
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      resizeToAvoidBottomInset : false,
+      resizeToAvoidBottomInset: false,
       body: Container(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -230,31 +231,44 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 Container(
                   //margin: EdgeInsets.only(left: (MediaQuery.of(context).size.height)*0.02),
-                  height: (MediaQuery.of(context).size.height)*0.2,
+                  height: (MediaQuery.of(context).size.height) * 0.2,
                   width: MediaQuery.of(context).size.width,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular((MediaQuery.of(context).size.height)*0.08),bottomRight: Radius.circular((MediaQuery.of(context).size.height)*0.08)),
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(
+                            (MediaQuery.of(context).size.height) * 0.08),
+                        bottomRight: Radius.circular(
+                            (MediaQuery.of(context).size.height) * 0.08)),
                     color: Colors.orange,
-
                   ),
                   child: Container(
-                    margin: EdgeInsets.only(left: (MediaQuery.of(context).size.width)*0.02,top:(MediaQuery.of(context).size.height)*0.05 ),
+                    margin: EdgeInsets.only(
+                        left: (MediaQuery.of(context).size.width) * 0.02,
+                        top: (MediaQuery.of(context).size.height) * 0.05),
                     child: Column(
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            IconButton(onPressed: (){
-                              Navigator.pop(context);
-                            }, icon: const Icon(Icons.arrow_back))
+                            IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(Icons.arrow_back))
                           ],
                         ),
                         Container(
-                          margin: EdgeInsets.only(left: (MediaQuery.of(context).size.width)*0.05),
+                          margin: EdgeInsets.only(
+                              left: (MediaQuery.of(context).size.width) * 0.05),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: const [
-                              Text('Profile',textAlign: TextAlign.start,style: TextStyle(fontSize: 22,fontWeight: FontWeight.w700),),
+                              Text(
+                                'Profile',
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                    fontSize: 22, fontWeight: FontWeight.w700),
+                              ),
                             ],
                           ),
                         )
@@ -263,27 +277,29 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.only(top: MediaQuery.of(context).size.height*0.08),
+                  margin: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.height * 0.08),
                   child: Stack(
                     alignment: Alignment.bottomRight,
                     children: [
                       Container(
-                        height: MediaQuery.of(context).size.height*0.15,
-                        width: MediaQuery.of(context).size.height*0.15,
-                        decoration:   BoxDecoration(
-                          border: Border.all(width: 7,color: Colors.orange) ,
-                          borderRadius: const BorderRadius.all(Radius.circular(30)),
-
+                        height: MediaQuery.of(context).size.height * 0.15,
+                        width: MediaQuery.of(context).size.height * 0.15,
+                        decoration: BoxDecoration(
+                          border: Border.all(width: 7, color: Colors.orange),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(30)),
                         ),
                         child: ClipRRect(
-                          borderRadius: const BorderRadius.all(Radius.circular(20)),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(20)),
                           child: FittedBox(
                             fit: BoxFit.fill,
-                            child: imageFile!=null ?
-                            Image.file(imageFile!) :Image.network(userImage ),
+                            child: imageFile != null
+                                ? Image.file(imageFile!)
+                                : Image.network(userImage),
                           ),
                         ),
-
                       ),
                       InkWell(
                         onTap: showMenu,
@@ -292,142 +308,136 @@ class _ProfilePageState extends State<ProfilePage> {
                           width: 35,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: const BorderRadius.all(Radius.circular(15)),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(15)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.grey.withOpacity(0.2),
                                 spreadRadius: 5,
                                 blurRadius: 7,
-                                offset: const Offset(0, 3), // changes position of shadow
+                                offset: const Offset(
+                                    0, 3), // changes position of shadow
                               ),
                             ],
-
                           ),
-                          child: const Icon(Icons.camera_alt,color: Colors.orange,),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.orange,
+                          ),
                         ),
                       )
-
                     ],
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.only(top: MediaQuery.of(context).size.height*0.01),
+                  margin: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.height * 0.01),
                   child: Column(
                     children: [
                       Container(
-                        width: MediaQuery.of(context).size.width*0.85,
+                        width: MediaQuery.of(context).size.width * 0.85,
                         decoration: const BoxDecoration(
-                          //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
-                        ),
-                        child:   TextField(
-                              controller: namecontroller,
+                            //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
+                            ),
+                        child: TextField(
+                            controller: namecontroller,
                             decoration: const InputDecoration(
                               labelText: "Name",
-                              hintText:'Name',
-                              labelStyle: const TextStyle(
-                                color: Colors.black54
-                              ),
+                              hintText: 'Name',
+                              labelStyle:
+                                  const TextStyle(color: Colors.black54),
                               //border: InputBorder.none,
                               border: const UnderlineInputBorder(
                                 borderSide: BorderSide(color: Colors.green),
                               ),
-                            )
-                        ),
+                            )),
                       ),
                       Container(
-                        width: MediaQuery.of(context).size.width*0.85,
+                        width: MediaQuery.of(context).size.width * 0.85,
                         decoration: const BoxDecoration(
-                          //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
-                        ),
-                        child:   TextField(
-                          controller: companyname,
+                            //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
+                            ),
+                        child: TextField(
+                            controller: companyname,
                             decoration: const InputDecoration(
                               labelText: "Company Name",
-                              hintText:'Company Name',
-                              labelStyle: const TextStyle(
-                                color: Colors.black54
-                              ),
+                              hintText: 'Company Name',
+                              labelStyle: TextStyle(color: Colors.black54),
                               //border: InputBorder.none,
-                              border: const UnderlineInputBorder(
+                              border: UnderlineInputBorder(
                                 borderSide: BorderSide(color: Colors.green),
                               ),
-                            )
-                        ),
+                            )),
                       ),
                       Container(
-                        width: MediaQuery.of(context).size.width*0.85,
+                        width: MediaQuery.of(context).size.width * 0.85,
                         decoration: const BoxDecoration(
-                          //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
-                        ),
-                        child:   TextField(
-                          controller: phonenumber,
-
+                            //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
+                            ),
+                        child: TextField(
+                            controller: phonenumber,
                             decoration: const InputDecoration(
                               labelText: "Phone Number",
-                              hintText:'Phone Number',
+                              hintText: 'Phone Number',
 
-                              labelStyle: const TextStyle(
-                                color: Colors.black54
-                              ),
+                              labelStyle: TextStyle(color: Colors.black54),
                               //border: InputBorder.none,
-                              border: const UnderlineInputBorder(
+                              border: UnderlineInputBorder(
                                 borderSide: BorderSide(color: Colors.green),
                               ),
-                            )
-                        ),
+                            )),
                       ),
                       Container(
-                        width: MediaQuery.of(context).size.width*0.85,
+                        width: MediaQuery.of(context).size.width * 0.85,
                         decoration: const BoxDecoration(
-                          //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
-                        ),
-                        child:  TextField(
-                          controller: email,
+                            //border: Border(bottom: BorderSide(width: 1,color: Colors.black))
+                            ),
+                        child: TextField(
+                            controller: email,
                             decoration: const InputDecoration(
                               labelText: "Email",
-                              hintText:'Email',
-                              labelStyle: const TextStyle(
-                                color: Colors.black54
-                              ),
+                              hintText: 'Email',
+                              labelStyle: TextStyle(color: Colors.black54),
                               //border: InputBorder.none,
-                              border: const UnderlineInputBorder(
+                              border: UnderlineInputBorder(
                                 borderSide: BorderSide(color: Colors.green),
                               ),
-                            )
-                        ),
+                            )),
                       ),
-                      ElevatedButton(onPressed: (){
-                        _signOut(context);
-                        print('logging out');
-                      },
+                      ElevatedButton(
+                          onPressed: () {
+                            _signOut(context);
+                          },
                           child: const Text('LogOut'))
                     ],
-
                   ),
                 ),
               ],
             ),
             Container(
-              margin: EdgeInsets.only(bottom: (MediaQuery.of(context).size.height)*0.02),
+              margin: EdgeInsets.only(
+                  bottom: (MediaQuery.of(context).size.height) * 0.02),
               decoration: BoxDecoration(
                   color: Colors.orange,
-                  borderRadius: BorderRadius.all(Radius.circular((MediaQuery.of(context).size.height)*0.04))
-              ),
-              height: (MediaQuery.of(context).size.height)*0.1,
-              width: (MediaQuery.of(context).size.width)*0.9,
+                  borderRadius: BorderRadius.all(Radius.circular(
+                      (MediaQuery.of(context).size.height) * 0.04))),
+              height: (MediaQuery.of(context).size.height) * 0.1,
+              width: (MediaQuery.of(context).size.width) * 0.9,
               child: Row(
-                crossAxisAlignment:CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Container(
                     height: 40,
                     decoration: const BoxDecoration(
                         color: Colors.orange,
-                        borderRadius: BorderRadius.all(Radius.circular(22))
-                    ),
+                        borderRadius: BorderRadius.all(Radius.circular(22))),
                     child: IconButton(
-                      onPressed: (){
-                        Navigator.push(context, MaterialPageRoute(builder:  (context) => const HelloVendor()));
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const HelloVendor()));
                       },
                       icon: const Icon(Icons.home_filled),
                     ),
@@ -436,11 +446,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 40,
                     decoration: const BoxDecoration(
                         color: Colors.orange,
-                        borderRadius: BorderRadius.all(Radius.circular(22))
-                    ),
+                        borderRadius: BorderRadius.all(Radius.circular(22))),
                     child: IconButton(
-                      onPressed: (){
-                        Navigator.push(context, MaterialPageRoute(builder:  (context) => const ScheduledOrders()));
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const ScheduledOrders()));
                       },
                       icon: const Icon(Icons.access_time_rounded),
                     ),
@@ -449,11 +461,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 40,
                     decoration: const BoxDecoration(
                         color: Colors.orange,
-                        borderRadius: BorderRadius.all(Radius.circular(22))
-                    ),
+                        borderRadius: BorderRadius.all(Radius.circular(22))),
                     child: IconButton(
-                      onPressed: (){
-                        Navigator.push(context, MaterialPageRoute(builder:  (context) => const CompletedOrders()));
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CompletedOrders()));
                       },
                       icon: const Icon(Icons.shopping_cart_outlined),
                     ),
@@ -462,32 +476,30 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 40,
                     decoration: const BoxDecoration(
                         color: Colors.orangeAccent,
-                        borderRadius: BorderRadius.all(Radius.circular(22))
-                    ),
+                        borderRadius: BorderRadius.all(Radius.circular(22))),
                     child: IconButton(
-                      onPressed: (){
+                      onPressed: () {
                         //Navigator.push(context, MaterialPageRoute(builder:  (context) => const HelloVendor()));
                       },
-                      icon: const Icon(Icons.menu_rounded,color: Colors.white,),
+                      icon: const Icon(
+                        Icons.menu_rounded,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-
-
                 ],
               ),
             )
-
-
           ],
         ),
       ),
     );
-
-
   }
 }
 
 Future<void> _signOut(BuildContext context) async {
   await FirebaseAuth.instance.signOut();
-  Navigator.push(context, MaterialPageRoute(builder: (context)=>const SignIn()));
+  // ignore: use_build_context_synchronously
+  Navigator.push(
+      context, MaterialPageRoute(builder: (context) => const SignIn()));
 }

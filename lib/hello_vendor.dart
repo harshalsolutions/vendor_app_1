@@ -24,16 +24,29 @@ class HelloVendor extends StatefulWidget {
 var data;
 
 class _HelloVendorState extends State<HelloVendor> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String vendorid = '';
   User? currentUser = FirebaseAuth.instance.currentUser;
-
+  String? name = "Vendor";
   //final Stream<QuerySnapshot> vendors=FirebaseFirestore.instance.collection('vendors').snapshots();
   TextEditingController weightcontroller = TextEditingController();
   initState() {
     _getOrders();
     _getVendor();
+    getVendorData();
     super.initState();
+  }
+
+  getVendorData() async {
+    await FirebaseFirestore.instance
+        .collection('Vendors')
+        .where('phone', isEqualTo: currentUser?.phoneNumber?.substring(3))
+        .get()
+        .then((value) {
+      setState(() {
+        name = value.docs.first.data()['name'];
+      });
+    });
   }
 
   _getVendor() async {
@@ -76,6 +89,7 @@ class _HelloVendorState extends State<HelloVendor> {
           data = data1;
         });
       }
+      orderList = orderList.reversed.toList();
     });
   }
 
@@ -96,6 +110,9 @@ class _HelloVendorState extends State<HelloVendor> {
           data = data1;
         });
       }
+      setState(() {
+        scheduledorderList = scheduledorderList.reversed.toList();
+      });
     });
   }
 
@@ -103,7 +120,8 @@ class _HelloVendorState extends State<HelloVendor> {
   List<UserModel> usersList = [];
 
   Map dataUser = {};
-  getUsers(int index) async {
+  Future<Map<dynamic, dynamic>> getUsers(int index) async {
+    Map map = {};
     await FirebaseFirestore.instance
         .collection('Users')
         .where('uid', isEqualTo: scheduledorderList[index].uid)
@@ -116,10 +134,16 @@ class _HelloVendorState extends State<HelloVendor> {
         setState(() {
           dataUser = data1.data();
           // usersList.add(dataUser);
+          map = {
+            "name": data1['name'],
+            'address': data1['address'],
+            'image': data1['image']
+          };
           usersList.add(userModel);
         });
       }
     });
+    return map;
   }
 
   bool isagreed = false;
@@ -148,9 +172,9 @@ class _HelloVendorState extends State<HelloVendor> {
                     children: [
                       Container(
                         padding: const EdgeInsets.only(top: 50, left: 20),
-                        child: const Text(
-                          'Hello Vendor',
-                          style: TextStyle(
+                        child: Text(
+                          'Hello $name',
+                          style: const TextStyle(
                               fontSize: 22, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -508,27 +532,23 @@ class _HelloVendorState extends State<HelloVendor> {
                                                             // Orders.docs[index]['trackingId'].update(
                                                             //     {'orderStatus': 'rejected'});
                                                           },
-                                                          child: Container(
-                                                            height: 30,
-                                                            width: 30,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                          .all(
-                                                                      Radius.circular(
-                                                                          20)),
-                                                              border: Border.all(
-                                                                  width: 2,
-                                                                  color: Colors
-                                                                      .white),
-                                                            ),
-                                                            child: IconButton(
-                                                              onPressed: () {
-                                                                Navigator.pop(
-                                                                    context);
-                                                              },
-                                                              icon: const Icon(
+                                                          child: InkWell(
+                                                            child: Container(
+                                                              height: 30,
+                                                              width: 30,
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                borderRadius:
+                                                                    const BorderRadius
+                                                                            .all(
+                                                                        Radius.circular(
+                                                                            20)),
+                                                                border: Border.all(
+                                                                    width: 2,
+                                                                    color: Colors
+                                                                        .white),
+                                                              ),
+                                                              child: const Icon(
                                                                 Icons.close,
                                                                 color: Colors
                                                                     .white,
@@ -626,562 +646,578 @@ class _HelloVendorState extends State<HelloVendor> {
                                     itemBuilder: (context, index) {
                                       // print(
                                       //     'kkkkkkkkkkkkkkkkkkkkkkkk${scheduledorderList)}');
-                                      getUsers(index);
-                                      return InkWell(
-                                        child: Container(
-                                            width: (MediaQuery.of(context)
-                                                    .size
-                                                    .width) *
-                                                0.9,
-                                            padding: const EdgeInsets.all(25),
-                                            margin: const EdgeInsets.only(
-                                                bottom: 20),
-                                            decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.5),
-                                                    spreadRadius: 5,
-                                                    blurRadius: 7,
-                                                    offset: const Offset(0,
-                                                        3), // changes position of shadow
-                                                  ),
-                                                ],
-                                                borderRadius:
-                                                    const BorderRadius.all(
-                                                        Radius.circular(20))),
-                                            child: Column(
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    // CircleAvatar(
-                                                    //   radius: 35.0,
-                                                    //   backgroundImage:
-                                                    //       NetworkImage(
-                                                    //           usersList[index]
-                                                    //               .imgUrl),
-                                                    //   backgroundColor:
-                                                    //       Colors.transparent,
-                                                    // ),
-                                                    const SizedBox(width: 20),
-                                                    Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: <Widget>[
-                                                        Text(
-                                                          usersList[0]
-                                                              .name
-                                                              .toString(),
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  fontSize: 23),
-                                                          textAlign:
-                                                              TextAlign.start,
+
+                                      return FutureBuilder(
+                                          future: getUsers(index),
+                                          builder: (context, snapshot) {
+                                            var userdata = {};
+                                            if (snapshot.hasData) {
+                                              userdata = snapshot.data
+                                                  as Map<dynamic, dynamic>;
+                                            }
+                                            return InkWell(
+                                              child: Container(
+                                                  width: (MediaQuery.of(context)
+                                                          .size
+                                                          .width) *
+                                                      0.9,
+                                                  padding:
+                                                      const EdgeInsets.all(25),
+                                                  margin: const EdgeInsets.only(
+                                                      bottom: 20),
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.grey
+                                                              .withOpacity(0.5),
+                                                          spreadRadius: 5,
+                                                          blurRadius: 7,
+                                                          offset: const Offset(
+                                                              0,
+                                                              3), // changes position of shadow
                                                         ),
-                                                        Text(
-                                                          usersList[0]
-                                                              .address
-                                                              .toString(),
-                                                          textAlign:
-                                                              TextAlign.start,
-                                                        )
                                                       ],
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                      borderRadius:
+                                                          const BorderRadius
+                                                                  .all(
+                                                              Radius.circular(
+                                                                  20))),
+                                                  child: Column(
                                                     children: [
-                                                      const Text(
-                                                          'Pickup Address  : '),
-                                                      Expanded(
-                                                          child: Text(
-                                                              scheduledorderList[
-                                                                      index]
-                                                                  .pickupAdrs
-                                                                  .toString()))
-                                                    ]),
-                                                Row(children: [
-                                                  const Text('Pickup Date  : '),
-                                                  Expanded(
-                                                      child: Text(
-                                                          scheduledorderList[
-                                                                  index]
-                                                              .pickupTime
-                                                              .toString()))
-                                                ]),
-                                                Row(children: [
-                                                  const Text('Pickup Time  : '),
-                                                  Row(
-                                                    children: [
-                                                      const Text('11:45 PM'),
-                                                      const SizedBox(width: 30),
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(5),
-                                                        decoration: const BoxDecoration(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .all(Radius
-                                                                        .circular(
-                                                                            20)),
-                                                            color:
-                                                                Colors.orange),
-                                                        child: const Text(
-                                                            'Due in 2 Hours'),
-                                                      )
-                                                    ],
-                                                  )
-                                                ]),
-                                                const Divider(
-                                                  color: Colors.orange,
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  children: [
-                                                    InkWell(
-                                                      onTap: () {
-                                                        Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                                builder:
-                                                                    (context) =>
-                                                                        ScheduledOrderDetail(
-                                                                          orders:
-                                                                              scheduledorderList[index],
-                                                                          users:
-                                                                              usersList[0],
-                                                                        )));
-                                                      },
-                                                      child: const Text(
-                                                          'View Details',
-                                                          style: TextStyle(
-                                                              color: Colors
-                                                                  .orange)),
-                                                    ),
-                                                    Expanded(
-                                                      child: InkWell(
-                                                          onTap: () {
-                                                            //Navigator.push(context, MaterialPageRoute(builder:  (context) => const ProfilePage()));
-                                                            showDialog(
-                                                                context:
-                                                                    context,
-                                                                builder:
-                                                                    (context) {
-                                                                  bool
-                                                                      isAggreed =
-                                                                      false;
-                                                                  return StatefulBuilder(
-                                                                      builder:
-                                                                          (context,
-                                                                              setState) {
-                                                                    return AlertDialog(
-                                                                        content:
-                                                                            Container(
-                                                                      height: (MediaQuery.of(context)
-                                                                              .size
-                                                                              .height) *
-                                                                          0.5,
-                                                                      decoration:
-                                                                          const BoxDecoration(
-                                                                        //color: Colors.grey,
-                                                                        borderRadius:
-                                                                            BorderRadius.all(Radius.circular(50)),
-                                                                        //color: Colors.orange
-                                                                      ),
-                                                                      child:
-                                                                          Column(
-                                                                        children: [
-                                                                          Row(
-                                                                            children: [
-                                                                              const CircleAvatar(
-                                                                                radius: 35.0,
-                                                                                backgroundImage: NetworkImage('https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'),
-                                                                                backgroundColor: Colors.transparent,
-                                                                              ),
-                                                                              const SizedBox(width: 20),
-                                                                              Column(
-                                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                children: <Widget>[
-                                                                                  Text(
-                                                                                    usersList[0].name.toString(),
-                                                                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
-                                                                                    textAlign: TextAlign.start,
-                                                                                  ),
-                                                                                  Text(
-                                                                                    usersList[0].address.toString(),
-                                                                                    textAlign: TextAlign.start,
-                                                                                  )
-                                                                                ],
-                                                                              ),
-                                                                            ],
-                                                                          ),
-                                                                          Row(children: [
-                                                                            const Text('Pickup Address  : '),
-                                                                            Expanded(child: Text(scheduledorderList[index].pickupAdrs.toString(), style: const TextStyle(fontWeight: FontWeight.bold)))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Pickup Date  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              scheduledorderList[index].pickupTime.toString(),
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Length  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              '${scheduledorderList[index].length.toString()} cm',
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Breadth  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              '${scheduledorderList[index].breadth.toString()} cm',
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Height  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              '${scheduledorderList[index].height.toString()} cm',
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Weight of the package  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              '${scheduledorderList[index].weight.toString()} kg',
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Content of the package  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              scheduledorderList[index].packageContent.toString(),
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: const [
-                                                                            Text('Mode of Payment  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              'COD',
-                                                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Amount  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              '${scheduledorderList[index].packageValue}',
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(children: [
-                                                                            const Text('Type of shipment  : '),
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                              scheduledorderList[index].shipmentType.toString(),
-                                                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                                                            ))
-                                                                          ]),
-                                                                          Row(
-                                                                            children: <Widget>[
-                                                                              InkWell(
-                                                                                onTap: () {
-                                                                                  if (isagreed == true) {
-                                                                                    setState(() {
-                                                                                      isagreed = false;
-                                                                                    });
-                                                                                  } else {
-                                                                                    setState(() {
-                                                                                      isagreed = true;
-                                                                                    });
-                                                                                  }
-                                                                                },
-                                                                                child: Container(
-                                                                                  height: 20,
-                                                                                  decoration: BoxDecoration(border: Border.all(width: 1, color: Colors.black)),
-                                                                                  child: Icon(
-                                                                                    Icons.check,
-                                                                                    color: isagreed ? Colors.orange : Colors.white,
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                              const Text("I have received the cash")
-                                                                            ],
-                                                                          ),
-                                                                          InkWell(
-                                                                            onTap:
-                                                                                () {
-                                                                              var snackBar = const SnackBar(content: Text('Please Check the Box'));
-                                                                              isagreed
-                                                                                  ? showDialog(
-                                                                                      context: context,
-                                                                                      builder: (_) => AlertDialog(
-                                                                                              content: Container(
-                                                                                            height: (MediaQuery.of(context).size.height) * 0.21,
-                                                                                            decoration: const BoxDecoration(),
-                                                                                            child: Column(
-                                                                                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                              children: [
-                                                                                                Align(
-                                                                                                    alignment: Alignment.centerRight,
-                                                                                                    child: IconButton(
-                                                                                                        onPressed: () {
-                                                                                                          print("2");
-                                                                                                          Navigator.pop(context);
-                                                                                                        },
-                                                                                                        icon: const Icon(Icons.close))),
-                                                                                                const Text(
-                                                                                                  'Confirmed the weight of the parcel?',
-                                                                                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                                  textAlign: TextAlign.center,
-                                                                                                ),
-                                                                                                const SizedBox(
-                                                                                                  height: 20,
-                                                                                                ),
-                                                                                                Row(
-                                                                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                                  children: [
-                                                                                                    InkWell(
-                                                                                                      onTap: () {
-                                                                                                        showDialog(
-                                                                                                            context: context,
-                                                                                                            builder: (_) => AlertDialog(
-                                                                                                                    content: Container(
-                                                                                                                  height: (MediaQuery.of(context).size.height) * 0.3,
-                                                                                                                  decoration: const BoxDecoration(
-                                                                                                                    //color: Colors.grey,
-                                                                                                                    borderRadius: BorderRadius.all(Radius.circular(50)),
-                                                                                                                    //color: Colors.orange
-                                                                                                                  ),
-                                                                                                                  child: Column(
-                                                                                                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                                                    children: [
-                                                                                                                      Row(
-                                                                                                                        mainAxisAlignment: MainAxisAlignment.end,
-                                                                                                                        children: [
-                                                                                                                          IconButton(
-                                                                                                                              onPressed: () {
-                                                                                                                                print('3');
-                                                                                                                                Navigator.pop(context);
-                                                                                                                              },
-                                                                                                                              icon: const Icon(Icons.close))
-                                                                                                                        ],
-                                                                                                                      ),
-                                                                                                                      const Text(
-                                                                                                                        'Enter the weight of the package',
-                                                                                                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                                                      ),
-                                                                                                                      Container(
-                                                                                                                        height: (MediaQuery.of(context).size.height) * 0.05,
-                                                                                                                        padding: const EdgeInsets.only(left: 15, right: 15),
-                                                                                                                        decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 1), borderRadius: const BorderRadius.all(Radius.circular(10))),
-                                                                                                                        child: Row(
-                                                                                                                          children: <Widget>[
-                                                                                                                            Flexible(
-                                                                                                                              child: TextField(
-                                                                                                                                controller: weightcontroller,
-                                                                                                                                decoration: const InputDecoration(hintText: 'Weight', border: InputBorder.none),
-                                                                                                                              ),
-                                                                                                                            ),
-                                                                                                                            const Expanded(
-                                                                                                                                child: Align(
-                                                                                                                              alignment: Alignment.centerRight,
-                                                                                                                              child: Text(
-                                                                                                                                'Kg',
-                                                                                                                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
-                                                                                                                              ),
-                                                                                                                            ))
-                                                                                                                          ],
-                                                                                                                        ),
-                                                                                                                      ),
-                                                                                                                      InkWell(
-                                                                                                                        onTap: () async {
-                                                                                                                          FirebaseFirestore db = FirebaseFirestore.instance;
-
-                                                                                                                          final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
-                                                                                                                          await updateStatus.update({
-                                                                                                                            "weight": weightcontroller.text,
-                                                                                                                            "orderStatus": "picked"
-                                                                                                                          }).then((value) {
-                                                                                                                            print("done");
-                                                                                                                          });
-                                                                                                                          //updateData(id1, id2, n),
-
-                                                                                                                          showDialog(
-                                                                                                                              context: context,
-                                                                                                                              builder: (_) => AlertDialog(
-                                                                                                                                      content: SizedBox(
-                                                                                                                                    height: (MediaQuery.of(context).size.height) * 0.21,
-                                                                                                                                    child: Column(
-                                                                                                                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                                                                      children: [
-                                                                                                                                        Align(
-                                                                                                                                            alignment: Alignment.centerRight,
-                                                                                                                                            child: IconButton(
-                                                                                                                                                onPressed: () {
-                                                                                                                                                  Navigator.pop(context);
-                                                                                                                                                },
-                                                                                                                                                icon: const Icon(Icons.close))),
-                                                                                                                                        const Text(
-                                                                                                                                          'You have Successfully Completed your pickup',
-                                                                                                                                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                                                                          textAlign: TextAlign.center,
-                                                                                                                                        ),
-                                                                                                                                        const SizedBox(
-                                                                                                                                          height: 20,
-                                                                                                                                        ),
-                                                                                                                                        Row(
-                                                                                                                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                                                                          children: [
-                                                                                                                                            InkWell(
-                                                                                                                                              onTap: () {
-                                                                                                                                                Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
-                                                                                                                                              },
-                                                                                                                                              child: Container(
-                                                                                                                                                height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                                                                width: (MediaQuery.of(context).size.width) * 0.65,
-                                                                                                                                                decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                                                                child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                                                                              ),
-                                                                                                                                            ),
-                                                                                                                                          ],
-                                                                                                                                        ),
-                                                                                                                                      ],
-                                                                                                                                    ),
-                                                                                                                                  )));
-                                                                                                                        },
-                                                                                                                        child: Container(
-                                                                                                                          height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                                          width: (MediaQuery.of(context).size.width) * 0.8,
-                                                                                                                          decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                                          child: const Center(child: Text('Next', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22))),
-                                                                                                                        ),
-                                                                                                                      )
-                                                                                                                    ],
-                                                                                                                  ),
-                                                                                                                )));
-                                                                                                      },
-                                                                                                      child: Container(
-                                                                                                        height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                        width: (MediaQuery.of(context).size.width) * 0.3,
-                                                                                                        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                        child: const Center(child: Text('Edit Weight', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                                      ),
-                                                                                                    ),
-                                                                                                    InkWell(
-                                                                                                      onTap: () {
-                                                                                                        FirebaseFirestore db = FirebaseFirestore.instance;
-
-                                                                                                        final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
-                                                                                                        updateStatus.update({"orderStatus": "picked"}).then((value) {
-                                                                                                          print("done");
-                                                                                                        });
-                                                                                                        //updateData(id1, id2, n),
-                                                                                                        showDialog(
-                                                                                                            context: context,
-                                                                                                            builder: (_) => AlertDialog(
-                                                                                                                    content: SizedBox(
-                                                                                                                  height: (MediaQuery.of(context).size.height) * 0.21,
-                                                                                                                  child: Column(
-                                                                                                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                                                                                    children: [
-                                                                                                                      Align(
-                                                                                                                          alignment: Alignment.centerRight,
-                                                                                                                          child: IconButton(
-                                                                                                                              onPressed: () {
-                                                                                                                                Navigator.pop(context);
-                                                                                                                              },
-                                                                                                                              icon: const Icon(Icons.close))),
-                                                                                                                      const Text(
-                                                                                                                        'You have Successfully Completed your pickup',
-                                                                                                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                                                                                        textAlign: TextAlign.center,
-                                                                                                                      ),
-                                                                                                                      const SizedBox(
-                                                                                                                        height: 20,
-                                                                                                                      ),
-                                                                                                                      Row(
-                                                                                                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                                                                        children: [
-                                                                                                                          InkWell(
-                                                                                                                            onTap: () {
-                                                                                                                              Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
-                                                                                                                            },
-                                                                                                                            child: Container(
-                                                                                                                              height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                                              width: (MediaQuery.of(context).size.width) * 0.65,
-                                                                                                                              decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                                              child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                                                            ),
-                                                                                                                          ),
-                                                                                                                        ],
-                                                                                                                      ),
-                                                                                                                    ],
-                                                                                                                  ),
-                                                                                                                )));
-                                                                                                      },
-                                                                                                      child: Container(
-                                                                                                        height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                                                        width: (MediaQuery.of(context).size.width) * 0.3,
-                                                                                                        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                                                        child: const Center(child: Text('Yes', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
-                                                                                                      ),
-                                                                                                    ),
-                                                                                                  ],
-                                                                                                ),
-                                                                                              ],
-                                                                                            ),
-                                                                                          )))
-                                                                                  : ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                                                                            },
-                                                                            child:
-                                                                                Container(
-                                                                              height: (MediaQuery.of(context).size.height) * 0.07,
-                                                                              width: (MediaQuery.of(context).size.width) * 0.8,
-                                                                              decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
-                                                                              child: const Center(child: Text('Proceed', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22))),
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ));
-                                                                  });
-                                                                });
-                                                          },
-                                                          child: const Align(
-                                                            alignment: Alignment
-                                                                .centerRight,
+                                                      Row(
+                                                        children: [
+                                                          CircleAvatar(
+                                                            radius: 35.0,
+                                                            backgroundImage:
+                                                                NetworkImage(
+                                                                    userdata[
+                                                                        'image']),
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .transparent,
+                                                          ),
+                                                          const SizedBox(
+                                                              width: 20),
+                                                          Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: <Widget>[
+                                                              Text(
+                                                                userdata[
+                                                                    'name'],
+                                                                style: const TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        23),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .start,
+                                                              ),
+                                                              Text(
+                                                                userdata[
+                                                                    'address'],
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .start,
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Row(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            const Text(
+                                                                'Pickup Address  : '),
+                                                            Expanded(
+                                                                child: Text(scheduledorderList[
+                                                                        index]
+                                                                    .pickupAdrs
+                                                                    .toString()))
+                                                          ]),
+                                                      Row(children: [
+                                                        const Text(
+                                                            'Pickup Date  : '),
+                                                        Expanded(
                                                             child: Text(
-                                                                'Pick Order',
+                                                                scheduledorderList[
+                                                                        index]
+                                                                    .pickupTime
+                                                                    .toString()))
+                                                      ]),
+                                                      Row(children: [
+                                                        const Text(
+                                                            'Pickup Time  : '),
+                                                        Expanded(
+                                                          child: Row(
+                                                            children: [
+                                                              const Text(
+                                                                  '11:45 PM'),
+                                                              const SizedBox(
+                                                                  width: 30),
+                                                              Container(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .all(5),
+                                                                decoration: const BoxDecoration(
+                                                                    borderRadius:
+                                                                        BorderRadius.all(Radius.circular(
+                                                                            20)),
+                                                                    color: Colors
+                                                                        .orange),
+                                                                child: const Text(
+                                                                    'Due in 2 Hours'),
+                                                              )
+                                                            ],
+                                                          ),
+                                                        )
+                                                      ]),
+                                                      const Divider(
+                                                        color: Colors.orange,
+                                                      ),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          InkWell(
+                                                            onTap: () {
+                                                              Navigator.push(
+                                                                  context,
+                                                                  MaterialPageRoute(
+                                                                      builder: (context) =>
+                                                                          ScheduledOrderDetail(
+                                                                            orders:
+                                                                                scheduledorderList[index],
+                                                                            users:
+                                                                                usersList[0],
+                                                                          )));
+                                                            },
+                                                            child: const Text(
+                                                                'View Details',
                                                                 style: TextStyle(
                                                                     color: Colors
                                                                         .orange)),
-                                                          )),
-                                                    )
-                                                  ],
-                                                )
-                                              ],
-                                            )),
-                                      );
+                                                          ),
+                                                          Expanded(
+                                                            child: InkWell(
+                                                                onTap: () {
+                                                                  //Navigator.push(context, MaterialPageRoute(builder:  (context) => const ProfilePage()));
+                                                                  showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          (context) {
+                                                                        bool
+                                                                            isAggreed =
+                                                                            false;
+                                                                        return StatefulBuilder(builder:
+                                                                            (context,
+                                                                                setState) {
+                                                                          return AlertDialog(
+                                                                              content: Container(
+                                                                            height:
+                                                                                (MediaQuery.of(context).size.height) * 0.5,
+                                                                            decoration:
+                                                                                const BoxDecoration(
+                                                                              //color: Colors.grey,
+                                                                              borderRadius: BorderRadius.all(Radius.circular(50)),
+                                                                              //color: Colors.orange
+                                                                            ),
+                                                                            child:
+                                                                                Expanded(
+                                                                              child: Column(
+                                                                                children: [
+                                                                                  Row(
+                                                                                    children: [
+                                                                                      const CircleAvatar(
+                                                                                        radius: 35.0,
+                                                                                        backgroundImage: NetworkImage('https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'),
+                                                                                        backgroundColor: Colors.transparent,
+                                                                                      ),
+                                                                                      const SizedBox(width: 20),
+                                                                                      Column(
+                                                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                        children: <Widget>[
+                                                                                          Text(
+                                                                                            usersList[0].name.toString(),
+                                                                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+                                                                                            textAlign: TextAlign.start,
+                                                                                          ),
+                                                                                          Text(
+                                                                                            usersList[0].address.toString(),
+                                                                                            textAlign: TextAlign.start,
+                                                                                          )
+                                                                                        ],
+                                                                                      ),
+                                                                                    ],
+                                                                                  ),
+                                                                                  Row(children: [
+                                                                                    const Text('Pickup Address  : '),
+                                                                                    Expanded(child: Text(scheduledorderList[index].pickupAdrs.toString(), style: const TextStyle(fontWeight: FontWeight.bold)))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Pickup Date  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      scheduledorderList[index].pickupTime.toString(),
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Length  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      '${scheduledorderList[index].length.toString()} cm',
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Breadth  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      '${scheduledorderList[index].breadth.toString()} cm',
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Height  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      '${scheduledorderList[index].height.toString()} cm',
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Weight of the package  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      '${scheduledorderList[index].weight.toString()} kg',
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Content of the package  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      scheduledorderList[index].packageContent.toString(),
+                                                                                      overflow: TextOverflow.ellipsis,
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: const [
+                                                                                    Text('Mode of Payment  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      'COD',
+                                                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Amount  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      '${scheduledorderList[index].packageValue}',
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(children: [
+                                                                                    const Text('Type of shipment  : '),
+                                                                                    Expanded(
+                                                                                        child: Text(
+                                                                                      scheduledorderList[index].shipmentType.toString(),
+                                                                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                                                                    ))
+                                                                                  ]),
+                                                                                  Row(
+                                                                                    children: <Widget>[
+                                                                                      InkWell(
+                                                                                        onTap: () {
+                                                                                          if (isagreed == true) {
+                                                                                            setState(() {
+                                                                                              isagreed = false;
+                                                                                            });
+                                                                                          } else {
+                                                                                            setState(() {
+                                                                                              isagreed = true;
+                                                                                            });
+                                                                                          }
+                                                                                        },
+                                                                                        child: Container(
+                                                                                          height: 20,
+                                                                                          decoration: BoxDecoration(border: Border.all(width: 1, color: Colors.black)),
+                                                                                          child: Icon(
+                                                                                            Icons.check,
+                                                                                            color: isagreed ? Colors.orange : Colors.white,
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                      const Text("I have received the cash")
+                                                                                    ],
+                                                                                  ),
+                                                                                  InkWell(
+                                                                                    onTap: () {
+                                                                                      var snackBar = const SnackBar(content: Text('Please Check the Box'));
+                                                                                      isagreed
+                                                                                          ? showDialog(
+                                                                                              context: context,
+                                                                                              builder: (_) => AlertDialog(
+                                                                                                      content: Container(
+                                                                                                    height: (MediaQuery.of(context).size.height) * 0.21,
+                                                                                                    decoration: const BoxDecoration(),
+                                                                                                    child: Column(
+                                                                                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                                                                      children: [
+                                                                                                        Align(
+                                                                                                            alignment: Alignment.centerRight,
+                                                                                                            child: IconButton(
+                                                                                                                onPressed: () {
+                                                                                                                  print("2");
+                                                                                                                  Navigator.pop(context);
+                                                                                                                },
+                                                                                                                icon: const Icon(Icons.close))),
+                                                                                                        const Text(
+                                                                                                          'Confirmed the weight of the parcel?',
+                                                                                                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                                                                                          textAlign: TextAlign.center,
+                                                                                                        ),
+                                                                                                        const SizedBox(
+                                                                                                          height: 20,
+                                                                                                        ),
+                                                                                                        Row(
+                                                                                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                                                                          children: [
+                                                                                                            InkWell(
+                                                                                                              onTap: () {
+                                                                                                                showDialog(
+                                                                                                                    context: context,
+                                                                                                                    builder: (_) => AlertDialog(
+                                                                                                                            content: Container(
+                                                                                                                          height: (MediaQuery.of(context).size.height) * 0.3,
+                                                                                                                          decoration: const BoxDecoration(
+                                                                                                                            //color: Colors.grey,
+                                                                                                                            borderRadius: BorderRadius.all(Radius.circular(50)),
+                                                                                                                            //color: Colors.orange
+                                                                                                                          ),
+                                                                                                                          child: Column(
+                                                                                                                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                                                                                            children: [
+                                                                                                                              Row(
+                                                                                                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                                                                                                children: [
+                                                                                                                                  IconButton(
+                                                                                                                                      onPressed: () {
+                                                                                                                                        print('3');
+                                                                                                                                        Navigator.pop(context);
+                                                                                                                                      },
+                                                                                                                                      icon: const Icon(Icons.close))
+                                                                                                                                ],
+                                                                                                                              ),
+                                                                                                                              const Text(
+                                                                                                                                'Enter the weight of the package',
+                                                                                                                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                                                                                                              ),
+                                                                                                                              Container(
+                                                                                                                                height: (MediaQuery.of(context).size.height) * 0.05,
+                                                                                                                                padding: const EdgeInsets.only(left: 15, right: 15),
+                                                                                                                                decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 1), borderRadius: const BorderRadius.all(Radius.circular(10))),
+                                                                                                                                child: Row(
+                                                                                                                                  children: <Widget>[
+                                                                                                                                    Flexible(
+                                                                                                                                      child: TextField(
+                                                                                                                                        controller: weightcontroller,
+                                                                                                                                        decoration: const InputDecoration(hintText: 'Weight', border: InputBorder.none),
+                                                                                                                                      ),
+                                                                                                                                    ),
+                                                                                                                                    const Expanded(
+                                                                                                                                        child: Align(
+                                                                                                                                      alignment: Alignment.centerRight,
+                                                                                                                                      child: Text(
+                                                                                                                                        'Kg',
+                                                                                                                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+                                                                                                                                      ),
+                                                                                                                                    ))
+                                                                                                                                  ],
+                                                                                                                                ),
+                                                                                                                              ),
+                                                                                                                              InkWell(
+                                                                                                                                onTap: () async {
+                                                                                                                                  FirebaseFirestore db = FirebaseFirestore.instance;
+
+                                                                                                                                  final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
+                                                                                                                                  await updateStatus.update({
+                                                                                                                                    "weight": weightcontroller.text,
+                                                                                                                                    "orderStatus": "picked"
+                                                                                                                                  }).then((value) {
+                                                                                                                                    print("done");
+                                                                                                                                  });
+                                                                                                                                  //updateData(id1, id2, n),
+
+                                                                                                                                  showDialog(
+                                                                                                                                      context: context,
+                                                                                                                                      builder: (_) => AlertDialog(
+                                                                                                                                              content: SizedBox(
+                                                                                                                                            height: (MediaQuery.of(context).size.height) * 0.21,
+                                                                                                                                            child: Column(
+                                                                                                                                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                                                                                                              children: [
+                                                                                                                                                Align(
+                                                                                                                                                    alignment: Alignment.centerRight,
+                                                                                                                                                    child: IconButton(
+                                                                                                                                                        onPressed: () {
+                                                                                                                                                          Navigator.pop(context);
+                                                                                                                                                        },
+                                                                                                                                                        icon: const Icon(Icons.close))),
+                                                                                                                                                const Text(
+                                                                                                                                                  'You have Successfully Completed your pickup',
+                                                                                                                                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                                                                                                                                  textAlign: TextAlign.center,
+                                                                                                                                                ),
+                                                                                                                                                const SizedBox(
+                                                                                                                                                  height: 20,
+                                                                                                                                                ),
+                                                                                                                                                Row(
+                                                                                                                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                                                                                                                  children: [
+                                                                                                                                                    InkWell(
+                                                                                                                                                      onTap: () {
+                                                                                                                                                        Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
+                                                                                                                                                      },
+                                                                                                                                                      child: Container(
+                                                                                                                                                        height: (MediaQuery.of(context).size.height) * 0.07,
+                                                                                                                                                        width: (MediaQuery.of(context).size.width) * 0.65,
+                                                                                                                                                        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                                                                                                                                        child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                                                                                                                                      ),
+                                                                                                                                                    ),
+                                                                                                                                                  ],
+                                                                                                                                                ),
+                                                                                                                                              ],
+                                                                                                                                            ),
+                                                                                                                                          )));
+                                                                                                                                },
+                                                                                                                                child: Container(
+                                                                                                                                  height: (MediaQuery.of(context).size.height) * 0.07,
+                                                                                                                                  width: (MediaQuery.of(context).size.width) * 0.8,
+                                                                                                                                  decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                                                                                                                  child: const Center(child: Text('Next', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22))),
+                                                                                                                                ),
+                                                                                                                              )
+                                                                                                                            ],
+                                                                                                                          ),
+                                                                                                                        )));
+                                                                                                              },
+                                                                                                              child: Container(
+                                                                                                                height: (MediaQuery.of(context).size.height) * 0.07,
+                                                                                                                width: (MediaQuery.of(context).size.width) * 0.3,
+                                                                                                                decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                                                                                                child: const Center(child: Text('Edit Weight', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                                                                                              ),
+                                                                                                            ),
+                                                                                                            InkWell(
+                                                                                                              onTap: () {
+                                                                                                                FirebaseFirestore db = FirebaseFirestore.instance;
+
+                                                                                                                final updateStatus = db.collection("Orders").doc(scheduledorderList[index].trackingId);
+                                                                                                                updateStatus.update({"orderStatus": "picked"}).then((value) {
+                                                                                                                  print("done");
+                                                                                                                });
+                                                                                                                //updateData(id1, id2, n),
+                                                                                                                showDialog(
+                                                                                                                    context: context,
+                                                                                                                    builder: (_) => AlertDialog(
+                                                                                                                            content: SizedBox(
+                                                                                                                          height: (MediaQuery.of(context).size.height) * 0.21,
+                                                                                                                          child: Column(
+                                                                                                                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                                                                                            children: [
+                                                                                                                              Align(
+                                                                                                                                  alignment: Alignment.centerRight,
+                                                                                                                                  child: IconButton(
+                                                                                                                                      onPressed: () {
+                                                                                                                                        Navigator.pop(context);
+                                                                                                                                      },
+                                                                                                                                      icon: const Icon(Icons.close))),
+                                                                                                                              const Text(
+                                                                                                                                'You have Successfully Completed your pickup',
+                                                                                                                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                                                                                                                textAlign: TextAlign.center,
+                                                                                                                              ),
+                                                                                                                              const SizedBox(
+                                                                                                                                height: 20,
+                                                                                                                              ),
+                                                                                                                              Row(
+                                                                                                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                                                                                                children: [
+                                                                                                                                  InkWell(
+                                                                                                                                    onTap: () {
+                                                                                                                                      Navigator.push(_, MaterialPageRoute(builder: (context) => const HelloVendor()));
+                                                                                                                                    },
+                                                                                                                                    child: Container(
+                                                                                                                                      height: (MediaQuery.of(context).size.height) * 0.07,
+                                                                                                                                      width: (MediaQuery.of(context).size.width) * 0.65,
+                                                                                                                                      decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                                                                                                                      child: const Center(child: Text('Go To Home', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                                                                                                                    ),
+                                                                                                                                  ),
+                                                                                                                                ],
+                                                                                                                              ),
+                                                                                                                            ],
+                                                                                                                          ),
+                                                                                                                        )));
+                                                                                                              },
+                                                                                                              child: Container(
+                                                                                                                height: (MediaQuery.of(context).size.height) * 0.07,
+                                                                                                                width: (MediaQuery.of(context).size.width) * 0.3,
+                                                                                                                decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                                                                                                child: const Center(child: Text('Yes', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15))),
+                                                                                                              ),
+                                                                                                            ),
+                                                                                                          ],
+                                                                                                        ),
+                                                                                                      ],
+                                                                                                    ),
+                                                                                                  )))
+                                                                                          : ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                                                                    },
+                                                                                    child: Container(
+                                                                                      height: (MediaQuery.of(context).size.height) * 0.07,
+                                                                                      width: (MediaQuery.of(context).size.width) * 0.8,
+                                                                                      decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.orange),
+                                                                                      child: const Center(child: Text('Proceed', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22))),
+                                                                                    ),
+                                                                                  ),
+                                                                                ],
+                                                                              ),
+                                                                            ),
+                                                                          ));
+                                                                        });
+                                                                      });
+                                                                },
+                                                                child:
+                                                                    const Align(
+                                                                  alignment:
+                                                                      Alignment
+                                                                          .centerRight,
+                                                                  child: Text(
+                                                                      'Pick Order',
+                                                                      style: TextStyle(
+                                                                          color:
+                                                                              Colors.orange)),
+                                                                )),
+                                                          )
+                                                        ],
+                                                      )
+                                                    ],
+                                                  )),
+                                            );
+                                          });
                                     }),
                               )
                             : SizedBox(
